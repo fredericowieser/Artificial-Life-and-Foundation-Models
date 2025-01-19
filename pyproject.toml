@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "artificial-life-and-foundation-models"
+version = "0.1.0"
+description = ""
+authors = ["Frederico Wieser <20886677+fredericowieser@users.noreply.github.com>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "3.11.11"
+numpy = "^2.2.2"
+jax = "^0.5.0"
+scikit-learn = "^1.6.1"
+matplotlib = "^3.10.0"
+seaborn = "^0.13.2"
+torch = "^2.5.1"
+torchvision = "^0.20.1"
+torchaudio = "^2.5.1"
+ipython = "^8.31.0"
+
+[tool.poetry.group.dev.dependencies]
+jupyter = "^1.1.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
