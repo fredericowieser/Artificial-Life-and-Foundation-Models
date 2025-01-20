@@ -23,3 +23,9 @@ jupyter notebook
 ```
 This will make the default python for running your notebooks on the jupyter platform the virtual environment's python.
 
+### Running Python Scripts
+
+To run different python scripts one would do:
+```sh
+poetry run python3 SCRIPT.py
+```
