@@ -2,7 +2,7 @@
 name = "artificial-life-and-foundation-models"
 version = "0.1.0"
 description = ""
-authors = ["Frederico Wieser <20886677+fredericowieser@users.noreply.github.com>"]
+authors = ["Nikhil","Hannah","Paul","Fred"]
 readme = "README.md"
 package-mode = false
 
