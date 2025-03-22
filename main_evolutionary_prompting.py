@@ -162,7 +162,7 @@ def main(args):
 
         evolved_prompt=gemma.describe_video(video_frames,extract_prompt=evolve_instruction, max_tokens=15)
 
-        print("Gemma siggested new prompt", evolved_prompt)
+        print("Gemma suggested new prompt", evolved_prompt)
         current_prompt=evolved_prompt
         args.prompts = evolved_prompt
 

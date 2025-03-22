@@ -11,6 +11,29 @@ import os
 os.environ['XLA_PYTHON_CLIENT_PREALLOCATE'] = 'false'
 
 from torchvision.transforms import ToPILImage
+
+def clean_gemma_output(raw_text):
+    """
+    Removes lines before "model", trims extra whitespace, and returns the rest.
+    """
+    # Split on newlines
+    lines = raw_text.splitlines()
+    cleaned_lines = []
+
+    # Look for "model" line and record everything after
+    start_collecting = False
+    for line in lines:
+        if "model" in line.strip().lower():
+            start_collecting = True
+            continue
+        if start_collecting:
+            # Skip empty lines or lines with only whitespace
+            if line.strip():
+                cleaned_lines.append(line.strip())
+
+    # Combine everything back into a single string
+    return " ".join(cleaned_lines)
+
 class Gemma3Chat:
     """
     A condensed Gemma 3 chat-based replacement for the old LLaVA code.
@@ -92,4 +115,4 @@ class Gemma3Chat:
 
         with torch.no_grad():
             output_ids = self.model.generate(**inputs, max_new_tokens=max_tokens, do_sample=False)
-        return self.processor.decode(output_ids[0], skip_special_tokens=True)
+        return clean_gemma_output(self.processor.decode(output_ids[0], skip_special_tokens=True))
