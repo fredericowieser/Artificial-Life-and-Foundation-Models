@@ -13,6 +13,11 @@ from asal_metrics import (
     calc_supervised_target_softmax_score,
     calc_open_endedness_score,
 )
+import cProfile
+import pstats
+import io
+from tqdm import tqdm
+from torch.func import vmap
 
 def asal(
     fm,
@@ -100,6 +105,11 @@ def asal(
         img_size=224,
         return_state=False
     )
+    # rollout_fn = torch.jit.script(rollout_fn)
+
+    # Optimise rollout Function (Only Work on CUDA)
+    if device.type == "cuda":
+        batched_rollout_fn = vmap(rollout_simulation, in_dims=(0,))
 
     # Create an EvoTorch Problem
     class LeniaProblem(Problem):
@@ -127,13 +137,14 @@ def asal(
 
             # We'll store the final loss in a 1D tensor of shape [batch_size].
             losses = torch.zeros(batch_size, device=x.device, dtype=x.dtype)
+            if device.type == "cuda":
+                rollout_data = batched_rollout_fn(x)
+            else:
+                for i in range(batch_size):
+                    params_i = x[i]
+                    rollout_data = rollout_fn(params=params_i)
 
             for i in range(batch_size):
-                params_i = x[i]
-                # If you want multiple seeds (bs) for each solution, you'd do that in a small loop:
-                # but here we do a single rollout for brevity
-                rollout_data = rollout_fn(params=params_i)
-
                 # rollout_data is a list of dicts (time_sampling='video').
                 # Each dict has: 'rgb' -> image, 'z' -> embedding
                 # Collect the 'z' from each frame:
@@ -186,7 +197,7 @@ def asal(
     # We'll store the best solution each iteration in a Python list for demonstration
     best_losses = []
 
-    for iteration in range(n_iters):
+    for iteration in tqdm(range(n_iters)):
         # Evolve one iteration
         searcher.step()
         # Current best fitness in the population
@@ -244,23 +255,34 @@ if __name__=="__main__":
     # Load a foundation model
     fm = create_foundation_model("clip", device=DEVICE)
 
-    # Run ASAL
+    # Profile the ASAL function
+    profiler = cProfile.Profile()
+    profiler.enable()
+
     results = asal(
         fm=fm,
         device=DEVICE,
-        prompts="a caterpillar",    # textual prompt(s)
-        substrate=None,             # let asal create a default substrate
-        rollout_steps=256,           # fewer steps for a quick demo
-        n_iters=100,               # small number of iterations
-        save_dir=None,              # do not save to disk
+        prompts="a caterpillar",
+        substrate=None,
+        rollout_steps=256,
+        n_iters=10,
+        save_dir=None,
         seed=42,
-        pop_size=16,
+        pop_size=4,
         sigma=0.1,
-        coef_prompt=1.0,            # weighting for prompt-based objective
-        coef_softmax=0.0,           # weighting for softmax objective
-        coef_oe=0.0,                # weighting for open-endedness objective
+        coef_prompt=1.0,
+        coef_softmax=0.0,
+        coef_oe=0.0,
         bs=1,
     )
+
+    profiler.disable()
+
+    # Save and print profiling stats
+    s = io.StringIO()
+    ps = pstats.Stats(profiler, stream=s).sort_stats("cumtime")  # Sort by cumulative time
+    ps.print_stats(20)  # Show top 20 slowest functions
+    print(s.getvalue())  # Print the profiling results
 
     print("\n==== ASAL Demo Finished ====")
     print("Best Fitness:", results["best_fitness"])

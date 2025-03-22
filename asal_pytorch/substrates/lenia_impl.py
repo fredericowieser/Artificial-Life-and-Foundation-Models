@@ -134,7 +134,7 @@ class LeniaImpl:
 
     def step(self, carry, unused, phenotype_size, center_phenotype, record_phenotype):
         """
-        Perform a single Lenia step using PyTorch
+        Optimized single Lenia step using PyTorch.
         """
         # Unpack data from last step
         A = carry.world
@@ -142,47 +142,65 @@ class LeniaImpl:
         fK, X, reshape_c_k, reshape_k_c, R, T = carry.asset
         last_center, last_shift, total_shift, last_angle = carry.temp
 
-        # Move To Device
+        # Ensure parameters are on the same device as A (assumes gradients aren’t required)
         device = A.device
-        m = m.clone().detach().to(device)
-        s = s.clone().detach().to(device)
-        h = h.clone().detach().to(device)
+        m = m.to(device)
+        s = s.to(device)
+        h = h.to(device)
+        
+        # Combine unsqueeze calls via view (assumes m, s, h are 1D tensors of length k)
+        m = m.view(1, 1, -1)  # shape: (1, 1, k)
+        s = s.view(1, 1, -1)
+        h = h.view(1, 1, -1)
 
-        m = m.unsqueeze(0).unsqueeze(0)  # (1, 1, k)
-        s = s.unsqueeze(0).unsqueeze(0)  # (1, 1, k)
-        h = h.unsqueeze(0).unsqueeze(0)  # (1, 1, k)
+        # Precompute constants
+        invT = 1.0 / T
+        mid = self._config.world_size // 2
+        half_size = phenotype_size // 2
 
-        # Center world for accurate calculation of center and velocity
-        shifts = [-x for x in last_shift.tolist()]
-        A = torch.roll(A, shifts=shifts, dims=(-3, -2))
+        # Center world by rolling using negative last_shift (convert tensor directly)
+        A = torch.roll(A, shifts=(-last_shift).tolist(), dims=(-3, -2))
 
-        # Lenia step
+        # FFT of the world state
         fA = torch.fft.fft2(A, dim=(-3, -2))
-        reshape_c_k = reshape_c_k.to(torch.complex64)
-        fA_k = torch.einsum('yxc,ck->yxk', fA, reshape_c_k)
+        
+        # Convert reshape_c_k to complex only once if needed (ideally, precompute this outside the loop)
+        if not torch.is_complex(reshape_c_k):
+            reshape_c_k = reshape_c_k.to(torch.complex64)
+        
+        # Use torch.matmul instead of einsum: fA is (y, x, c) and reshape_c_k is (c, k)
+        fA_k = torch.matmul(fA, reshape_c_k)  # shape: (y, x, k)
+        
+        # Inverse FFT to get convolution results; take the real part.
         U_k = torch.real(torch.fft.ifft2(fK * fA_k, dim=(-3, -2)))
-        G_k = growth(U_k, m, s) * h
-        G = torch.einsum('yxk,kc->yxc', G_k, reshape_k_c)
-        next_A = torch.clamp(A + (1 / T) * G, 0, 1)
 
-        # Calculate center
+        # Inline the growth function: growth(x) = 2*exp(-((x-m)/s)**2/2)-1
+        tmp = (U_k - m) / s
+        bell_val = torch.exp(-0.5 * (tmp ** 2))
+        growth_val = 2 * bell_val - 1
+        G_k = growth_val * h
+
+        # Use torch.matmul instead of einsum: G_k (y, x, k) multiplied by reshape_k_c (k, c)
+        G = torch.matmul(G_k, reshape_k_c)
+
+        # Compute next world state with clamping
+        next_A = torch.clamp(A + invT * G, 0, 1)
+
+        # Calculate the center: weighted sum of positions (assumes X is shape (2, y, x))
         m00 = A.sum()
-        sum2d = next_A.sum(dim=-1)         # [y, x]
-        sum2d = sum2d.unsqueeze(0)         # [1, y, x]
-        AX = sum2d * X                     # [2, y, x], if X is [2, y, x]
-        center = AX.sum(dim=(-2, -1)) / m00
+        sum2d = next_A.sum(dim=-1, keepdim=True)  # shape: (y, x, 1)
+        # Rearranging dimensions to multiply with X (which is (2, y, x))
+        center = (sum2d.squeeze(-1) * X).sum(dim=(-2, -1)) / m00
         shift = (center * R).to(torch.int)
         total_shift = total_shift + shift
 
-        # Get phenotype
+        # Get phenotype if needed
         if record_phenotype:
             if center_phenotype:
                 phenotype = next_A
             else:
                 phenotype = torch.roll(next_A, shifts=(total_shift - shift).tolist(), dims=(0, 1))
-            mid = self._config.world_size // 2
-            half_size = phenotype_size // 2
-            phenotype = phenotype[mid-half_size:mid+half_size, mid-half_size:mid+half_size]
+            phenotype = phenotype[mid - half_size: mid + half_size, mid - half_size: mid + half_size]
         else:
             phenotype = None
 
@@ -195,19 +213,23 @@ class LeniaImpl:
         # Calculate angular velocity
         angle = torch.atan2(center_diff[1], center_diff[0]) / torch.pi
         angle_diff = (angle - last_angle + 3) % 2 - 1
-        angle_diff = torch.where(linear_velocity > 0.01, angle_diff, torch.tensor(0.0))
+        # Use device-aware constant for the fallback
+        angle_diff = torch.where(linear_velocity > 0.01, angle_diff, angle.new_zeros(()))
         angular_velocity = angle_diff * T
 
-        # Check if world is empty or full
+        # Check if world is empty or full using simpler slicing for borders
         is_empty = (next_A < 0.1).all(dim=(-3, -2)).any()
-        borders = (next_A[..., 0, :, :].sum() + next_A[..., -1, :, :].sum() +
-                   next_A[..., :, 0, :].sum() + next_A[..., :, -1, :].sum())
+        borders = (next_A[0, :, :].sum() + next_A[-1, :, :].sum() +
+                next_A[:, 0, :].sum() + next_A[:, -1, :].sum())
         is_full = borders > 0.1
-        is_spread = A[mid-half_size:mid+half_size, mid-half_size:mid+half_size].sum() / m00 < 0.9
+        is_spread = A[mid - half_size: mid + half_size, mid - half_size: mid + half_size].sum() / m00 < 0.9
 
         # Pack data for next step
         carry = carry._replace(world=next_A)
         carry = carry._replace(temp=Temp(center, shift, total_shift, angle))
-        stats = Stats(mass, actual_center[1], -actual_center[0], linear_velocity, angle, angular_velocity, is_empty, is_full, is_spread)
+ 
+        stats = Stats(mass, actual_center[1], -actual_center[0],
+                    linear_velocity, angle, angular_velocity,
+                    is_empty, is_full, is_spread)
         accum = Accum(phenotype, stats)
         return carry, accum

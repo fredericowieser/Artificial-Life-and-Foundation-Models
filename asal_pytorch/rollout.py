@@ -52,47 +52,54 @@ def rollout_simulation(
       - 'state': dict or None (depending on return_state)
     """
     with torch.no_grad():
-        # Setup initial state
-        if s0 is None:
-            s0 = substrate.init_state(rng, params)
-        state = s0
+        # Initialize state only once
+        state = s0 if s0 is not None else substrate.init_state(rng, params)
 
-        # If no foundation model, no embedding
-        def embed_img_fn(img):
-            return None if fm is None else fm.embed_img(img)
-
-        #'final' -> run rollout_steps, return only final frame + embedding
+        # 'final' branch: run simulation without intermediate renderings
         if time_sampling == 'final':
             for _ in range(rollout_steps):
                 state = substrate.step_state(rng, state, params)
-            # Render final frame
             img = substrate.render_state(state, params, img_size=img_size)
-            z = embed_img_fn(img)
+            # Single call: if fm supports batching, no overhead here
+            z = fm.embed_img(img) if fm is not None else None
             return {
                 'rgb': img,
                 'z': z,
                 'state': state if return_state else None
             }
 
-        # 'video' -> store data at each timestep
+        # 'video' branch: record every timestep
         elif time_sampling == 'video':
-            # We'll store a dict of data at each step (0..rollout_steps-1)
-            # final state is not strictly included unless we want it.
-            data_list = []
-            for step_i in range(rollout_steps):
-                # Render current state
+            imgs = []              # To collect rendered images
+            states_list = [] if return_state else None
+            for _ in range(rollout_steps):
+                # Render the current state
                 img = substrate.render_state(state, params, img_size=img_size)
-                z = embed_img_fn(img)
-                data_entry = {
-                    'rgb': img,
-                    'z': z,
-                    'state': state if return_state else None
-                }
-                data_list.append(data_entry)
-                # Step to next state
+                imgs.append(img)
+                if return_state:
+                    states_list.append(state)
+                # Step simulation (sequential dependency)
                 state = substrate.step_state(rng, state, params)
 
-            return data_list
+            # If a foundation model is provided, batch embed all images at once.
+            if fm is not None:
+                # Assume rendered images have consistent shape, e.g. (H, W, C)
+                imgs_tensor = torch.stack(imgs, dim=0)  # (rollout_steps, H, W, C)
+                z_batch = fm.embed_img(imgs_tensor)
+                # Convert embeddings to list to match expected output
+                z_list = list(z_batch)
+            else:
+                z_list = [None] * rollout_steps
+
+            # Assemble the output dictionaries in one go
+            return [
+                {
+                    'rgb': img,
+                    'z': z,
+                    'state': states_list[i] if return_state else None
+                }
+                for i, (img, z) in enumerate(zip(imgs, z_list))
+            ]
         
         # NOTE: The following logic is not needed for the current ASAL implementation
         # # K or (K, chunk_ends) -> run rollout_steps, then sample K intervals or chunk_ends
