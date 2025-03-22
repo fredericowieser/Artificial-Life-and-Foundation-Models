@@ -37,6 +37,7 @@ conda create -n asal python=3.10 -y && \
 conda activate asal && \
 conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia -y && \
 conda install numpy imageio -c conda-forge -y && \
+pip install imageio[ffmpeg] && \
 pip install evotorch && \
-pip3.11 install git+https://github.com/huggingface/transformers@v4.49.0-Gemma-3
+pip install git+https://github.com/huggingface/transformers@v4.49.0-Gemma-3
 ```
