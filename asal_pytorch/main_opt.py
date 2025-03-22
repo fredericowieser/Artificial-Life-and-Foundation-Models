@@ -31,8 +31,6 @@ def asal(
     bs: int = 1,
 ):
     """
-    EvoTorch-based PyTorch reimplementation of the JAX function 'asal'.
-
     Performs a black-box optimization with CMA-ES over the flattened parameters
     of a Lenia substrate, guided by textual prompts via a foundation model `fm`.
 
@@ -253,10 +251,10 @@ if __name__=="__main__":
         prompts="a caterpillar",    # textual prompt(s)
         substrate=None,             # let asal create a default substrate
         rollout_steps=256,           # fewer steps for a quick demo
-        n_iters=10,               # small number of iterations
+        n_iters=100,               # small number of iterations
         save_dir=None,              # do not save to disk
         seed=42,
-        pop_size=4,
+        pop_size=16,
         sigma=0.1,
         coef_prompt=1.0,            # weighting for prompt-based objective
         coef_softmax=0.0,           # weighting for softmax objective

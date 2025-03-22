@@ -51,99 +51,99 @@ def rollout_simulation(
       - 'z':    embedding or list thereof (if fm is not None)
       - 'state': dict or None (depending on return_state)
     """
-    # Setup initial state
-    if s0 is None:
-        s0 = substrate.init_state(rng, params)
-
-    # If no foundation model, no embedding
-    def embed_img_fn(img):
-        return None if fm is None else fm.embed_img(img)
-
-    #'final' -> run rollout_steps, return only final frame + embedding
-    if time_sampling == 'final':
+    with torch.no_grad():
+        # Setup initial state
+        if s0 is None:
+            s0 = substrate.init_state(rng, params)
         state = s0
-        for _ in range(rollout_steps):
-            state = substrate.step_state(rng, state, params)
-        # Render final frame
-        img = substrate.render_state(state, params, img_size=img_size)
-        z = embed_img_fn(img)
-        return {
-            'rgb': img,
-            'z': z,
-            'state': state if return_state else None
-        }
 
-    # 'video' -> store data at each timestep
-    elif time_sampling == 'video':
-        # We'll store a dict of data at each step (0..rollout_steps-1)
-        # final state is not strictly included unless we want it.
-        data_list = []
-        state = s0
-        for step_i in range(rollout_steps):
-            # Render current state
+        # If no foundation model, no embedding
+        def embed_img_fn(img):
+            return None if fm is None else fm.embed_img(img)
+
+        #'final' -> run rollout_steps, return only final frame + embedding
+        if time_sampling == 'final':
+            for _ in range(rollout_steps):
+                state = substrate.step_state(rng, state, params)
+            # Render final frame
             img = substrate.render_state(state, params, img_size=img_size)
             z = embed_img_fn(img)
-            data_entry = {
+            return {
                 'rgb': img,
                 'z': z,
                 'state': state if return_state else None
             }
-            data_list.append(data_entry)
-            # Step to next state
-            state = substrate.step_state(rng, state, params)
 
-        return data_list
+        # 'video' -> store data at each timestep
+        elif time_sampling == 'video':
+            # We'll store a dict of data at each step (0..rollout_steps-1)
+            # final state is not strictly included unless we want it.
+            data_list = []
+            for step_i in range(rollout_steps):
+                # Render current state
+                img = substrate.render_state(state, params, img_size=img_size)
+                z = embed_img_fn(img)
+                data_entry = {
+                    'rgb': img,
+                    'z': z,
+                    'state': state if return_state else None
+                }
+                data_list.append(data_entry)
+                # Step to next state
+                state = substrate.step_state(rng, state, params)
 
-    # K or (K, chunk_ends) -> run rollout_steps, then sample K intervals or chunk_ends
-    elif isinstance(time_sampling, int) or (
-        isinstance(time_sampling, tuple)
-        and len(time_sampling) == 2
-        and isinstance(time_sampling[0], int)
-        and isinstance(time_sampling[1], bool)
-    ):
-        if isinstance(time_sampling, int):
-            K = time_sampling
-            chunk_ends = False
+            return data_list
+        
+        # NOTE: The following logic is not needed for the current ASAL implementation
+        # # K or (K, chunk_ends) -> run rollout_steps, then sample K intervals or chunk_ends
+        # elif isinstance(time_sampling, int) or (
+        #     isinstance(time_sampling, tuple)
+        #     and len(time_sampling) == 2
+        #     and isinstance(time_sampling[0], int)
+        #     and isinstance(time_sampling[1], bool)
+        # ):
+        #     if isinstance(time_sampling, int):
+        #         K = time_sampling
+        #         chunk_ends = False
+        #     else:
+        #         K, chunk_ends = time_sampling
+
+        #     # We'll store the entire trajectory to sample from it
+        #     states = []
+        #     states.append(state)
+        #     for _ in range(rollout_steps):
+        #         state = substrate.step_state(rng, state, params)
+        #         states.append(state)
+
+        #     # states list length = rollout_steps+1 (initial + each step)
+
+        #     # Compute sampling indices
+        #     chunk_size = rollout_steps // K
+        #     if chunk_ends:
+        #         # start sampling from chunk_size-1 to rollout_steps
+        #         # i.e. [chunk_size, 2*chunk_size, ..., rollout_steps]
+        #         idx_sample = list(range(chunk_size, rollout_steps+1, chunk_size))
+        #     else:
+        #         # [0, chunk_size, 2*chunk_size, ..., rollout_steps]
+        #         idx_sample = list(range(0, rollout_steps+1, chunk_size))
+        #         # ensure we don't exceed final index
+        #         if idx_sample[-1] > rollout_steps:
+        #             idx_sample[-1] = rollout_steps
+
+        #     # For each sampled index, render
+        #     data_list = []
+        #     for idx in idx_sample:
+        #         st = states[idx]
+        #         img = substrate.render_state(st, params, img_size=img_size)
+        #         z = embed_img_fn(img)
+        #         data_entry = {
+        #             'rgb': img,
+        #             'z': z,
+        #             'state': st if return_state else None
+        #         }
+        #         data_list.append(data_entry)
+
+        #     return data_list
+
         else:
-            K, chunk_ends = time_sampling
-
-        # We'll store the entire trajectory to sample from it
-        states = []
-        state = s0
-        states.append(state)
-        for _ in range(rollout_steps):
-            state = substrate.step_state(rng, state, params)
-            states.append(state)
-
-        # states list length = rollout_steps+1 (initial + each step)
-
-        # Compute sampling indices
-        chunk_size = rollout_steps // K
-        if chunk_ends:
-            # start sampling from chunk_size-1 to rollout_steps
-            # i.e. [chunk_size, 2*chunk_size, ..., rollout_steps]
-            idx_sample = list(range(chunk_size, rollout_steps+1, chunk_size))
-        else:
-            # [0, chunk_size, 2*chunk_size, ..., rollout_steps]
-            idx_sample = list(range(0, rollout_steps+1, chunk_size))
-            # ensure we don't exceed final index
-            if idx_sample[-1] > rollout_steps:
-                idx_sample[-1] = rollout_steps
-
-        # For each sampled index, render
-        data_list = []
-        for idx in idx_sample:
-            st = states[idx]
-            img = substrate.render_state(st, params, img_size=img_size)
-            z = embed_img_fn(img)
-            data_entry = {
-                'rgb': img,
-                'z': z,
-                'state': st if return_state else None
-            }
-            data_list.append(data_entry)
-
-        return data_list
-
-    else:
-        raise ValueError(f"time_sampling {time_sampling} not recognized")
+            raise ValueError(f"time_sampling {time_sampling} not recognized")
