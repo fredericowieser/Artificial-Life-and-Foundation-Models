@@ -18,6 +18,7 @@ class CLIP:
             torch.backends.cuda.matmul.allow_tf32 = True
 
         # Load model and processor
+        self.device = device
         self.processor = AutoProcessor.from_pretrained(f"openai/{clip_model}")
         self.clip_model = CLIPModel.from_pretrained(f"openai/{clip_model}").to(self.device).eval()
 
