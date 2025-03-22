@@ -29,17 +29,15 @@ class Gemma3Chat:
         :param torch_dtype: Torch dtype (e.g., float16). Auto-chosen if None.
         :param max_context_length: Max token length for text + images. Defaults to 128k for Gemma 3 4B+.
         """
-        # if device is None:
-        #     device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
-        # self.device = torch.device(device)
+        if device is None:
+            device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+        self.device = torch.device(device)
         
         # Enable faster GPU matrix multiplications
         if self.device.type == "cuda":
             torch.backends.cuda.matmul.allow_tf32 = True
 
-        if device is None:
-            device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.device = device
+      
 
         if torch_dtype is None:
             torch_dtype = torch.bfloat16 if device == "cuda" else torch.float32
@@ -47,11 +45,10 @@ class Gemma3Chat:
 
         self.max_context_length = max_context_length
 
-        self.processor = AutoProcessor.from_pretrained(model_id, token=token)
+        self.processor = AutoProcessor.from_pretrained(model_id)
         self.model = Gemma3ForConditionalGeneration.from_pretrained(
             model_id,
             torch_dtype=self.torch_dtype,
-            token=token,
         )
         if torch.__version__ >= "2.0":
             self.model = torch.compile(self.model)
