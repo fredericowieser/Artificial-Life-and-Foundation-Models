@@ -66,15 +66,14 @@ class Gemma3Chat:
         Generates a description for a list of raw video frames (NumPy arrays).
         Frames are sampled up to `max_images` and processed by the Gemma 3 model.
         """
-        if isinstance(video_frames, Image.Image):
-            frames = [Image.fromarray(f).convert("RGB") for f in video_frames]
-        elif isinstance(video_frames, torch.Tensor):
-        
+        if isinstance(video_frames, torch.Tensor):
             to_pil = ToPILImage()
             frames = []
             for frame in video_frames:
                 frames.append(to_pil(frame))
-    
+        else:
+            frames = [Image.fromarray(f).convert("RGB") for f in video_frames]
+
         if len(frames) > max_images:
             step = max(1, len(frames) // max_images)
             frames = frames[0::step][:max_images]
