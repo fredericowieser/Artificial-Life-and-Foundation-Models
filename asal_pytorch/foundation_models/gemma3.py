@@ -9,8 +9,7 @@ from tqdm.auto import tqdm
 from PIL import Image
 import os
 os.environ['XLA_PYTHON_CLIENT_PREALLOCATE'] = 'false'
-from google.colab import userdata
-hf_token = userdata.get('HF')
+
 from torchvision.transforms import ToPILImage
 class Gemma3Chat:
     """
@@ -23,7 +22,6 @@ class Gemma3Chat:
         device=None,
         torch_dtype=None,
         max_context_length=128000,
-        token=hf_token,
     ):
         """
         :param model_id: Hugging Face ID of the Gemma 3 VLM model.
