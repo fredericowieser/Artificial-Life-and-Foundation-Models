@@ -10,6 +10,8 @@ import numpy as np
 import evosax
 from tqdm.auto import tqdm
 import imageio
+import wandb
+
 import asal.substrates as substrates
 import asal.foundation_models as foundation_models
 from asal.rollout import rollout_simulation
@@ -22,6 +24,7 @@ parser = argparse.ArgumentParser()
 group = parser.add_argument_group("meta")
 group.add_argument("--seed", type=int, default=0, help="the random seed")
 group.add_argument("--save_dir", type=str, default=None, help="path to save results to")
+group.add_argument("--wandb", action="store_true", help="log to wandb; default false unless flag is given")
 
 group = parser.add_argument_group("substrate")
 group.add_argument("--substrate", type=str, default='boids', help="name of the substrate")
@@ -107,6 +110,18 @@ def run_optimisation(args,rng, iteration=0):
         es_state, di = do_iter(es_state, _rng)
 
         data.append(di)
+
+        if args.wandb:
+            loss_dict = di["loss_dict"]
+            wandb.log({
+                "iteration": i_iter,
+                "best_loss": float(di["best_loss"]),
+                "loss": float(loss_dict["loss"][0]),
+                "loss_prompt": float(loss_dict["loss_prompt"][0]),
+                "loss_softmax": float(loss_dict["loss_softmax"][0]),
+                "loss_oe": float(loss_dict["loss_oe"][0])
+            })
+
         pbar.set_postfix(best_loss=es_state.best_fitness.item())
         if args.save_dir is not None and (i_iter % (args.n_iters//10)==0 or i_iter==args.n_iters-1): # save data every 10% of the run
             data_save = jax.tree.map(lambda *x: np.array(jnp.stack(x, axis=0)), *data)
@@ -138,8 +153,20 @@ def run_optimisation(args,rng, iteration=0):
         video_path = os.path.join(args.save_dir, f"video_{iteration}.mp4")
         imageio.mimsave(video_path, video_frames, fps=30, codec="libx264")
         print(f"Video saved at: {video_path}")
+
+        wandb.log({"video_iteration": iteration, "video": wandb.Video(video_path, fps=30, format="mp4")})
+
         return video_path, video_frames, rng
+    
 def main(args):
+
+    # Initialize wandb
+    if args.wandb:
+        wandb.init(project="asal", config=vars(args))
+
+    if args.save_dir is not None:
+        prompt_file = os.path.join(args.save_dir, "evolved_prompts.txt")
+
     final_video_paths = []
     final_frames = []  # To collect frames from all iterations
 
@@ -149,6 +176,10 @@ def main(args):
     final_frames.extend(video_frames)
     current_prompt = args.prompts  # starting prompt
 
+    # Log video
+    if args.wandb:
+        wandb.log({"video_iteration": 0, "video": wandb.Video(video_path, fps=30, format="mp4")})
+
     # Initialize Gemma3Chat for feedback.
     gemma = Gemma3Chat()
 
@@ -156,10 +187,23 @@ def main(args):
         print(f"Gemma iteration {i+1}/{args.N}")
         
         evolve_instruction = (
-            f"This video was evolved to produce this previous target prompt: '{current_prompt}'. Provide a new, interesting target prompt in the same style as the previous prompt for the next stage of evolution which will produce diverse, interesting, original behaviour. Be creative, and answer concisely and simple, use Proper Nouns. ONLY output the new target prompt and nothing else."
+            f"""This artificial life simulation was optimised to produce PREVIOUS TARGET PROMPT: '{current_prompt}'.
+
+            Your task is to provide a NEXT TARGET PROMPT for the next stage of the artificial life evolution, following on from the previous prompt and simulation. Your aim is to create a diverse, interesting and meaningfully different life form. Use your imagination, but keep your target prompt simple and concise. ONLY output the new target prompt and nothing else.
+
+            NEXT TARGET PROMPT: """
         )
 
         evolved_prompt=gemma.describe_video(video_frames,extract_prompt=evolve_instruction, max_tokens=15)
+
+        if args.save_dir is not None:
+            # Log prompt file to save_dir
+            with open(prompt_file, "a") as f:
+                f.write(f"Iteration {i+1}: {evolved_prompt}\n")
+            
+            # Log the prompt file and text to wandb
+        if args.wandb:
+            wandb.log({"evolved_prompt": evolved_prompt, "gemma_iteration": i+1})        
 
         print("Gemma suggested new prompt", evolved_prompt)
         current_prompt=evolved_prompt
@@ -168,10 +212,17 @@ def main(args):
         video_path, video_frames, rng = run_optimisation(args, rng, iteration=i+1)
         final_video_paths.append(video_path)
         final_frames.extend(video_frames)
+
+    if args.wandb:
+        # Also upload prompt file to wandb
+        wandb.save(prompt_file)
     
     final_video_path=os.path.join(args.save_dir, "final_video.mp4")
     imageio.mimsave(final_video_path, final_frames, fps=30,codec="libx264" )
     print(f"Final video saved at: {final_video_path}")
+
+    wandb.log({"final_video": wandb.Video(final_video_path, fps=30, format="mp4")})
+    wandb.finish()
 
 
 if __name__ == '__main__':
