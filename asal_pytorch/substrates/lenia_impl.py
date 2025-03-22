@@ -220,7 +220,7 @@ class LeniaImpl:
         # Check if world is empty or full using simpler slicing for borders
         is_empty = (next_A < 0.1).all(dim=(-3, -2)).any()
         borders = (next_A[0, :, :].sum() + next_A[-1, :, :].sum() +
-                next_A[:, 0, :].sum() + next_A[:, -1, :].sum())
+                   next_A[:, 0, :].sum() + next_A[:, -1, :].sum())
         is_full = borders > 0.1
         is_spread = A[mid - half_size: mid + half_size, mid - half_size: mid + half_size].sum() / m00 < 0.9
 

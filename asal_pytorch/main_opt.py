@@ -2,6 +2,7 @@ from functools import partial
 import os
 import torch
 import numpy as np
+import imageio
 from evotorch import Problem, SolutionBatch
 from evotorch.algorithms import CMAES
 from evotorch.logging import StdOutLogger
@@ -18,6 +19,8 @@ import pstats
 import io
 from tqdm import tqdm
 from torch.func import vmap
+
+FPS = 15
 
 def asal(
     fm,
@@ -214,7 +217,9 @@ def asal(
             # import pdb; pdb.set_trace()
             best_solution_vector = searcher.population[0].values.clone().detach().cpu()
             if save_dir:
-                ckpt_path = os.path.join(save_dir, f"ckpt_iter_{iteration}.pt")
+                save_dir_iter = os.path.join(save_dir, f"iter_{iteration}")
+                os.makedirs(save_dir_iter, exist_ok=True)
+                ckpt_path = os.path.join(save_dir_iter, f"ckpt_iter_{iteration}.pt")
                 torch.save({
                     "iter": iteration,
                     "best_solution_vector": best_solution_vector
@@ -225,6 +230,21 @@ def asal(
                     "best_solution": best_solution_vector,
                     "loss_log": np.array(best_losses),
                 }, ckpt_path)
+                # Save A Video Of The Current Best Solution
+                frames_data = rollout_fn(params=best_solution_vector)
+                # import ipdb; ipdb.set_trace()
+                # Save the video
+                # Convert the frames to NumPy arrays in [0..255]
+                frames_float = [step_dict['rgb'].cpu().numpy() for step_dict in frames_data]
+                frames_uint8 = [np.clip(frame * 255.0, 0, 255).astype(np.uint8) for frame in frames_float]
+
+                # Write to MP4 (H.264) or GIF
+                # imageio handles the format by extension. This will write an mp4 video.
+                video_path = os.path.join(save_dir_iter, f"video_{iteration+1}.mp4")
+                with imageio.get_writer(video_path, fps=FPS, format='FFMPEG') as writer:
+                    for frame in frames_uint8:
+                        writer.append_data(frame)
+                print(f"Saved Lenia simulation video to: {save_dir_iter}")
 
     # Summarize final results
     best_fitness = searcher.status["pop_best_eval"]
@@ -266,7 +286,7 @@ if __name__=="__main__":
         substrate=None,
         rollout_steps=256,
         n_iters=10,
-        save_dir=None,
+        save_dir="./demo_run/",
         seed=42,
         pop_size=4,
         sigma=0.1,

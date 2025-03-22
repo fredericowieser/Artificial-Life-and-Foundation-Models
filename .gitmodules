@@ -1,0 +1,3 @@
+[submodule "asal"]
+	path = asal
+	url = git@github.com:SakanaAI/asal.git
