@@ -43,6 +43,8 @@ from asal.rollout import rollout_simulation
 import asal.asal_metrics as asal_metrics
 import asal.util as util
 
+from asal_pytorch.foundation_models import Gemma3Chat
+
 parser = argparse.ArgumentParser()
 group = parser.add_argument_group("meta")
 group.add_argument("--seed", type=int, default=0, help="the random seed")
@@ -167,7 +169,12 @@ def main(args):
         imageio.mimsave(video_path, video_frames, fps=30)
         print(f"Video saved at: {video_path}")
     
-    
+        # Calculate Similarity Score
+        description = Gemma3Chat().describe_video(video_frames)
+        z_txt_gen = fm.embed_txt(description)
+        similarity = -asal_metrics.calc_reconstruction_loss(z_txt, z_txt_gen).item()
+        print(f"Similarity Score: {similarity}")
+
 
     
 

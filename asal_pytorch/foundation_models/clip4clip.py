@@ -17,13 +17,9 @@ from torchvision.transforms.functional import InterpolationMode
 
 from PIL import Image
 
-# Add your Hugging Face Token Here To Use Gemma3
-from google.colab import userdata
-hf_token = userdata.get('HF')
-
 from typing import Any, Union, List
 
-class Clip4Clip:
+class CLIP4CLIP:
     def __init__(
         self,
         model_name: str = "Searchium-ai/clip4clip-webvid150k",
