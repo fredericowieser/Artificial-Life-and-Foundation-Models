@@ -156,8 +156,7 @@ def main(args):
         print(f"Gemma iteration {i+1}/{args.N}")
         
         evolve_instruction = (
-            f"Given the original prompt '{current_prompt}' and the video provided, "
-            "suggest a new, evolved prompt to further enhance the creativity of the video generation."
+            f"This video was evolved to produce this previous target prompt: '{current_prompt}'. Provide a new, interesting target prompt for the next stage of evolution which will produce diverse, interesting, original behaviour. Be creative, and answer concisely. ONLY output the new target prompt and nothing else."
         )
 
         evolved_prompt=gemma.describe_video(video_frames,extract_prompt=evolve_instruction, max_tokens=15)
