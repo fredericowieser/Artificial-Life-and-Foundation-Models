@@ -56,7 +56,8 @@ echo "uv is installed."
 
 # Create and activate virtual environment
 echo "Creating virtual environment..."
-uv venv --python=3.11.11 .venv
+uv venv .venv
+uv venv --python 3.11
 
 # Install requirements in virtual environment
 echo "Installing dependencies..."
