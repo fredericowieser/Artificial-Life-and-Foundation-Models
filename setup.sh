@@ -53,6 +53,7 @@ fi
 
 # Explicitly reload PATH to make sure uv is found
 export PATH="$HOME/.local/bin:$PATH"
+export PATH="/root/.local/bin:$PATH"  # Explicitly add for root user
 
 echo "uv is installed."
 
