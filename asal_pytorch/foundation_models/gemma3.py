@@ -34,6 +34,7 @@ def clean_gemma_output(raw_text):
     # Combine everything back into a single string
     return " ".join(cleaned_lines)
 
+
 class Gemma3Chat:
     """
     A condensed Gemma 3 chat-based replacement for the old LLaVA code.
@@ -41,10 +42,11 @@ class Gemma3Chat:
 
     def __init__(
         self,
+        token,
         model_id="google/gemma-3-4b-it",
         device=None,
         torch_dtype=None,
-        max_context_length=128000,
+        max_context_length=128000
     ):
         """
         :param model_id: Hugging Face ID of the Gemma 3 VLM model.
@@ -68,10 +70,11 @@ class Gemma3Chat:
 
         self.max_context_length = max_context_length
 
-        self.processor = AutoProcessor.from_pretrained(model_id)
+        self.processor = AutoProcessor.from_pretrained(model_id, token=token)
         self.model = Gemma3ForConditionalGeneration.from_pretrained(
             model_id,
             torch_dtype=self.torch_dtype,
+            token=token
         )
         if torch.__version__ >= "2.0":
             self.model = torch.compile(self.model)
