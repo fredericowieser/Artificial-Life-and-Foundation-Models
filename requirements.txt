@@ -13,3 +13,5 @@ evotorch
 jupyter==1.1.1
 git+https://github.com/huggingface/transformers@v4.49.0-Gemma-3
 imageio
+einops
+tqdm
