@@ -121,6 +121,13 @@ def asal(
         batched_rollout_fn = vmap(rollout_simulation, in_dims=(0,))
 
     if coef_rl > 0.0:
+
+        gemma = Gemma3Chat(
+            token=os.getenv("HUGGINGFACE_TOKEN"),
+            model_id="google/gemma-3-4b-it",
+            max_context_length=128000,
+        )
+
         rollout_fn_rl = partial(
             rollout_simulation,
             s0=None,
@@ -132,12 +139,9 @@ def asal(
             return_state=False
         )
 
-        gemma = Gemma3Chat(
-            model_id="google/gemma-3-4b-it",
-            max_context_length=128000,
-        )
-        # batched_rollout_fn version as well ?
-
+        if device.type == "cuda": # TODO: batched_rollout_fn version as well?
+            batched_rollout_fn_rl = vmap(rollout_simulation, in_dims=(0,))
+        
     # Create an EvoTorch Problem
     class LeniaProblem(Problem):
         def __init__(self, device):
@@ -159,7 +163,7 @@ def asal(
             solutions.values has shape (batch_size, n_params).
             We must compute a float loss for each solution and call solutions.set_evals(...).
             """
-            x = solutions.values  # shape: (batch_size, n_params)
+            x = solutions.values # shape: (batch_size, n_params)
             batch_size = x.shape[0]
 
             # We'll store the final loss in a 1D tensor of shape [batch_size].
@@ -173,24 +177,36 @@ def asal(
 
             if coef_rl > 0.0:
                 rng = torch.manual_seed(0)
-                # use batched_rollout_fn version as well ???
-                for i in range(batch_size):
-                    params_i = x[i]
-                    rollout_data_rl = rollout_fn_rl(rng, params=params_i)
-                    # or try data = rollout_data(rng, params)
-            
+                if device.type == "cuda":
+                    rollout_data_rl = batched_rollout_fn_rl(x)
+                else:
+                    for i in range(batch_size):
+                        params_i = x[i]
+                        rollout_data_rl = rollout_fn_rl(rng, params=params_i)
+
             for i in range(batch_size):
                 # rollout_data is a list of dicts (time_sampling='video').
                 # Each dict has: 'rgb' -> image, 'z' -> embedding
+
                 # Collect the 'z' from each frame:
                 z_frames = [f['z'] for f in rollout_data if f['z'] is not None]
+
                 if len(z_frames) == 0:
                     # If fm.embed_img returned None, define z = None => no embeddings
                     z = None
                 else:
                     # shape: (T, embed_dim)
                     z = torch.stack(z_frames, dim=0)
-
+            
+                if coef_rl > 0.0:
+                    # Collect the 'rgb' from each frame
+                    rgb_frames =  [f['rgb'] for f in rollout_data_rl if f['rgb'] is not None]
+                    if len(rgb_frames) == 0:
+                        images = None
+                    else:
+                        # shape: (T, embed_dim)
+                        images = torch.stack(rgb_frames, dim=0)
+                
                 # Compute the combined objective:
                 # Weighted sum of different sub-losses
                 loss_i = torch.tensor(0.0, device=x.device, dtype=x.dtype)
@@ -208,16 +224,18 @@ def asal(
                     loss_i += coef_oe * loss_oe
                 
                 if coef_rl > 0.0:
-                    rgb_frames = np.array(rollout_data_rl['rgb'])
-                    video_frames = (rgb_frames * 255).clip(0, 255).astype(np.uint8)
-                    # imageio.mimsave(output_path, video_frames, fps=fps)
+                    frames_float = [step_dict['rgb'].cpu().numpy() for step_dict in rollout_data_rl] # images ???
+                    frames_uint8 = [np.clip(frame * 255.0, 0, 255).astype(np.uint8) for frame in frames_float]
+
                     final_text = gemma.describe_video(
-                        video_frames=video_frames,
+                        video_frames=frames_uint8,
                         max_images=20
                     )
+
                     z_desc = fm.embed_txt(final_text[:70])
                     loss_rl = calc_reconstruction_loss(z_txt, z_desc)
                     loss_i += coef_rl * loss_rl
+                    # print(loss_i)
 
                 losses[i] = loss_i
 
@@ -330,7 +348,7 @@ if __name__=="__main__":
         prompts="a caterpillar",
         substrate=None,
         rollout_steps=256,
-        n_iters=1,
+        n_iters=2,
         save_dir="./demo_run/",
         seed=42,
         pop_size=4,
