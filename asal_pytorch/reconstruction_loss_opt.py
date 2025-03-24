@@ -13,12 +13,15 @@ from asal_metrics import (
     calc_supervised_target_score,
     calc_supervised_target_softmax_score,
     calc_open_endedness_score,
+    calc_reconstruction_loss
 )
 import cProfile
 import pstats
 import io
 from tqdm import tqdm
 from torch.func import vmap
+
+from foundation_models.gemma3 import Gemma3Chat
 
 FPS = 15
 
@@ -36,6 +39,7 @@ def asal(
     coef_prompt: float = 0.0,
     coef_softmax: float = 0.0,
     coef_oe: float = 0.0,
+    coef_rl: float = 0.0,
     bs: int = 1,
 ):
     """
@@ -70,6 +74,8 @@ def asal(
         Weight of the softmax-based term in the loss.
     coef_oe : float
         Weight of open-endedness term in the loss.
+    coef_rl : float
+        Weight of reconstruction term in the loss.
     bs : int
         Number of random seeds for each solution's rollout (batching). Example demonstrates single-seed.
 
@@ -114,6 +120,24 @@ def asal(
     if device.type == "cuda":
         batched_rollout_fn = vmap(rollout_simulation, in_dims=(0,))
 
+    if coef_rl > 0.0:
+        rollout_fn_rl = partial(
+            rollout_simulation,
+            s0=None,
+            substrate=substrate,
+            fm=None,
+            rollout_steps=rollout_steps,
+            time_sampling='video', # Capture all frames
+            img_size=224,
+            return_state=False
+        )
+
+        gemma = Gemma3Chat(
+            model_id="google/gemma-3-4b-it",
+            max_context_length=128000,
+        )
+        # batched_rollout_fn version as well ?
+
     # Create an EvoTorch Problem
     class LeniaProblem(Problem):
         def __init__(self, device):
@@ -147,6 +171,14 @@ def asal(
                     params_i = x[i]
                     rollout_data = rollout_fn(params=params_i)
 
+            if coef_rl > 0.0:
+                rng = torch.manual_seed(0)
+                # use batched_rollout_fn version as well ???
+                for i in range(batch_size):
+                    params_i = x[i]
+                    rollout_data_rl = rollout_fn_rl(rng, params=params_i)
+                    # or try data = rollout_data(rng, params)
+            
             for i in range(batch_size):
                 # rollout_data is a list of dicts (time_sampling='video').
                 # Each dict has: 'rgb' -> image, 'z' -> embedding
@@ -174,6 +206,18 @@ def asal(
                 if coef_oe > 0.0:
                     loss_oe = calc_open_endedness_score(z)
                     loss_i += coef_oe * loss_oe
+                
+                if coef_rl > 0.0:
+                    rgb_frames = np.array(rollout_data_rl['rgb'])
+                    video_frames = (rgb_frames * 255).clip(0, 255).astype(np.uint8)
+                    # imageio.mimsave(output_path, video_frames, fps=fps)
+                    final_text = gemma.describe_video(
+                        video_frames=video_frames,
+                        max_images=20
+                    )
+                    z_desc = fm.embed_txt(final_text[:70])
+                    loss_rl = calc_reconstruction_loss(z_txt, z_desc)
+                    loss_i += coef_rl * loss_rl
 
                 losses[i] = loss_i
 
@@ -294,7 +338,8 @@ if __name__=="__main__":
         coef_prompt=1.0,
         coef_softmax=0.0,
         coef_oe=0.0,
-        bs=1,
+        coef_rl=1.0,
+        bs=1
     )
 
     profiler.disable()
