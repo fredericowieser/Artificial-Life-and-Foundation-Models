@@ -16,3 +16,4 @@ jupyter==1.1.1
 evosax==0.1.4
 git+https://github.com/huggingface/transformers@v4.49.0-Gemma-3
 jax[cuda12]
+jax[tpu]
