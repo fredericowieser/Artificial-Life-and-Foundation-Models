@@ -52,8 +52,9 @@ if ! command -v uv &> /dev/null; then
 fi
 
 # Explicitly reload PATH to make sure uv is found
-export PATH="$HOME/.local/bin:$PATH"
-export PATH="/root/.local/bin:$PATH"  # Explicitly add for root user
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+echo 'export PATH="/root/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
 
 echo "uv is installed."
 
