@@ -38,11 +38,9 @@ echo "Checking if uv is installed..."
 if ! command -v uv &> /dev/null; then
     echo "uv is not installed. Installing uv..."
     case $DEVICE_TYPE in
-        "mac")
+        "mac"|"debian")
             curl -LsSf https://astral.sh/uv/install.sh | sh
-            ;;
-        "debian")
-            curl -LsSf https://astral.sh/uv/install.sh | sh
+            export PATH="$HOME/.local/bin:$PATH"  # Ensure uv is found
             ;;
         "arch")
             sudo pacman -S uv
@@ -52,6 +50,10 @@ if ! command -v uv &> /dev/null; then
             ;;
     esac
 fi
+
+# Explicitly reload PATH to make sure uv is found
+export PATH="$HOME/.local/bin:$PATH"
+
 echo "uv is installed."
 
 # Create and activate virtual environment
