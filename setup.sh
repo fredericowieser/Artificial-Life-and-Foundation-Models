@@ -60,7 +60,10 @@ uv venv --python=3.11.11 .venv
 
 # Install requirements in virtual environment
 echo "Installing dependencies..."
+uv pip install --upgrade pip
 uv pip install -r requirements.txt
+uv pip install -U jax "jax[cuda12]" -f https://storage.googleapis.com/jax-releases/jax_releases.html
+uv pip install evosax==0.1.4
 echo "Virtual environment created."
 echo ""
 echo "############### NOTE TO USER ##################"
