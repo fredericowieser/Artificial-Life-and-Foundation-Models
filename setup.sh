@@ -82,5 +82,12 @@ else
     echo "source .venv/bin/activate"
 fi
 echo ""
+echo "To use some of the project you need to give you Hugging Face Token"
+echo "You can do this by running the following command:"
+echo ""
+echo "huggingface-cli login"
+echo ""
+echo "you can get your token from https://huggingface.co/settings/tokens"
+echo ""
 echo "###############################################"
 echo ""

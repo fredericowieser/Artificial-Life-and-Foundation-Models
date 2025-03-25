@@ -1,4 +1,4 @@
-prompt,gemma3 generated description,dot product
+prompt,gemma3 generated description,dot product (CLIP), dot product (VideoCLIP), similarity score (Gemma3)
 "a worm",,
 "a caterpillar",,
 "a virus",,

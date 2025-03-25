@@ -51,7 +51,7 @@ group.add_argument("--seed", type=int, default=0, help="the random seed")
 group.add_argument("--save_dir", type=str, default=None, help="path to save results to")
 
 group = parser.add_argument_group("substrate")
-group.add_argument("--substrate", type=str, default='boids', help="name of the substrate")
+group.add_argument("--substrate", type=str, default='lenia', help="name of the substrate")
 group.add_argument("--rollout_steps", type=int, default=None, help="number of rollout timesteps, leave None for the default of the substrate")
 
 group = parser.add_argument_group("evaluation")

@@ -10,10 +10,11 @@ A group project for COMP0258: Open-Endedness and General Intelligence, a course 
 
 ## How To Run Different Parts of Code
 
-Install everything you need with one script
+Install everything you need with one script:
 ```sh
 bash setup.sh
 ```
+You will then be prompted with some further instructions, to activate the environment and to add your Hugging Face details.
 
 ### Running Python Scripts
 
