@@ -67,8 +67,13 @@ uv venv --python 3.11
 echo "Installing dependencies..."
 uv pip install --upgrade pip
 uv pip install -r requirements.txt
-uv pip install -U jax "jax[cuda12]" -f https://storage.googleapis.com/jax-releases/jax_releases.html
-uv pip install evosax==0.1.4
+# Check if cuda is available, install jax with cuda support
+if nvcc --version &> /dev/null; then
+    echo "CUDA is available. Installing JAX with CUDA support..."
+    uv pip install -U "jax[cuda]" -f https://storage.googleapis.com/jax-releases/jax_releases.html
+else
+    echo "CUDA is not available."
+fi
 echo "Virtual environment created."
 echo ""
 echo "############### NOTE TO USER ##################"
