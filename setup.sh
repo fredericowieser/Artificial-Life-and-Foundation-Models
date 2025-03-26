@@ -30,7 +30,7 @@ echo "Operating system detected: $DEVICE_TYPE"
 
 # Initialize the submodules
 echo "Initializing submodules..."
-git submodule init && git submodule update
+git submodule update --init --recursive
 echo "Submodules initialized."
 
 # Install the dependencies using uv
