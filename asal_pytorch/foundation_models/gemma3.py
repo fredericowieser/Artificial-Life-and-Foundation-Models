@@ -1,4 +1,3 @@
-
 import torch
 from transformers import (
     AutoProcessor,
@@ -34,18 +33,17 @@ def clean_gemma_output(raw_text):
     # Combine everything back into a single string
     return " ".join(cleaned_lines)
 
-
 class Gemma3Chat:
     """
     A condensed Gemma 3 chat-based replacement for the old LLaVA code.
     """
 
-    def __init__(
+    def _init_(
         self,
         model_id="google/gemma-3-4b-it",
         device=None,
         torch_dtype=None,
-        max_context_length=128000
+        max_context_length=128000,
     ):
         """
         :param model_id: Hugging Face ID of the Gemma 3 VLM model.
@@ -69,12 +67,12 @@ class Gemma3Chat:
 
         self.max_context_length = max_context_length
 
-        self.processor = AutoProcessor.from_pretrained(model_id, token=token)
+        self.processor = AutoProcessor.from_pretrained(model_id)
         self.model = Gemma3ForConditionalGeneration.from_pretrained(
             model_id,
             torch_dtype=self.torch_dtype,
         )
-        if torch.__version__ >= "2.0":
+        if torch._version_ >= "2.0":
             self.model = torch.compile(self.model)
 
         self.model.to(self.device)
@@ -88,7 +86,7 @@ class Gemma3Chat:
         ):
         """
         Generates a description for a list of raw video frames (NumPy arrays).
-        Frames are sampled up to `max_images` and processed by the Gemma 3 model.
+        Frames are sampled up to ⁠ max_images ⁠ and processed by the Gemma 3 model.
         """
         if isinstance(video_frames, torch.Tensor):
             to_pil = ToPILImage()
