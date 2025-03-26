@@ -127,11 +127,12 @@ def run_optimisation(args,rng, iteration=0, wandb_logger=None):
             wandb_logger.log_losses(di)
 
     if args.wandb:
-        params = jax.tree.map(lambda x: np.array(x), (es_state.best_member, es_state.best_fitness))
+        params, _ = util.load_pkl(args.save_dir, "best")
         rng = jax.random.PRNGKey(args.seed)
         wandb_logger.log_video(rng, params, f"iteration_{iteration}")
+        print(f"Iteration {iteration} video logged to wandb")
 
-    if args.save_dir is not None:
+    if args.save_dir is not None and not args.wandb: #only save vids locally if not using wandb
         best_params = load_best_params(args.save_dir)
         # Using The Best Found Parameters
         rollout_fn = partial(
@@ -213,7 +214,7 @@ def main(args):
         final_video_paths.append(video_path)
         final_frames.extend(video_frames)
     
-    if args.save_dir is not None:
+    if args.save_dir is not None and not args.wandb: #only save vids locally if not using wandb
         final_video_path=os.path.join(args.save_dir, "final_video.mp4")
         imageio.mimsave(final_video_path, final_frames, fps=30,codec="libx264" )
         print(f"Final video saved at: {final_video_path}")
