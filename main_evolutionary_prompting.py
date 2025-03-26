@@ -127,7 +127,7 @@ def run_optimisation(args,rng, iteration=0, wandb_logger=None):
             wandb_logger.log_losses(di)
 
     if args.wandb:
-        params, _ = util.load_pkl(args.save_dir, "best")
+        params = jax.tree.map(lambda x: np.array(x), (es_state.best_member, es_state.best_fitness))
         rng = jax.random.PRNGKey(args.seed)
         wandb_logger.log_video(rng, params, f"iteration_{iteration}")
 
