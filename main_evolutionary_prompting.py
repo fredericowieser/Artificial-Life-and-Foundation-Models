@@ -190,14 +190,14 @@ def main(args):
         evolve_instruction = (
             f"""This artificial life simulation was optimised to produce PREVIOUS TARGET PROMPT: '{current_prompt}'.
 
-            Your task is to provide a NEXT TARGET PROMPT for the next stage of the artificial life evolution, following on from the previous prompt and simulation. Your aim is to create a diverse, interesting and new life form. Your NEXT TARGET PROMPT should be meaningfully different from PREVIOUS TARGET PROMPT in order to evolve open-ended, surprising life forms. Use your imagination, but keep your target prompt simple and concise. The algorithm will then optimise NEW TARGET PROMPT.
+            Your task is to provide a NEXT TARGET PROMPT for the next stage of the artificial life evolution, following on from the previous prompt and simulation. Your aim is to create a diverse, interesting and new life form. Your NEXT TARGET PROMPT should be macroscopically lifelike and meaningfully different from PREVIOUS TARGET PROMPT in order to evolve open-ended, surprising life forms. Use your imagination, but keep your target prompt simple and concise. The algorithm will then optimise NEW TARGET PROMPT.
             
             ONLY output the new target prompt and nothing else.
 
             NEXT TARGET PROMPT: """
         )
 
-        evolved_prompt=gemma.describe_video(video_frames,extract_prompt=evolve_instruction, max_tokens=15)
+        evolved_prompt=gemma.describe_video(video_frames,extract_prompt=evolve_instruction, max_tokens=10)
 
         if args.save_dir is not None:
             # Log prompt file to save_dir
