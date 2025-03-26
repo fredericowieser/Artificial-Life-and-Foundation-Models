@@ -132,7 +132,7 @@ def run_optimisation(args,rng, iteration=0, wandb_logger=None):
         wandb_logger.log_video(rng, params, f"iteration_{iteration}")
         print(f"Iteration {iteration} video logged to wandb")
 
-    if args.save_dir is not None and not args.wandb: #only save vids locally if not using wandb
+    if args.save_dir is not None: 
         best_params = load_best_params(args.save_dir)
         # Using The Best Found Parameters
         rollout_fn = partial(
@@ -214,7 +214,7 @@ def main(args):
         final_video_paths.append(video_path)
         final_frames.extend(video_frames)
     
-    if args.save_dir is not None and not args.wandb: #only save vids locally if not using wandb
+    if args.save_dir is not None :
         final_video_path=os.path.join(args.save_dir, "final_video.mp4")
         imageio.mimsave(final_video_path, final_frames, fps=30,codec="libx264" )
         print(f"Final video saved at: {final_video_path}")
