@@ -348,7 +348,7 @@ if __name__=="__main__":
         prompts="a caterpillar",
         substrate=None,
         rollout_steps=256,
-        n_iters=2,
+        n_iters=5,
         save_dir="./demo_run/",
         seed=42,
         pop_size=4,
@@ -356,7 +356,7 @@ if __name__=="__main__":
         coef_prompt=1.0,
         coef_softmax=0.0,
         coef_oe=0.0,
-        coef_rl=1.0,
+        coef_rl=0.0,
         bs=1
     )
 
