@@ -209,7 +209,7 @@ def main(args):
         current_prompt=evolved_prompt
         args.prompts = evolved_prompt
 
-        video_path, video_frames, rng = run_optimisation(args, rng, iteration=i+1)
+        video_path, video_frames, rng = run_optimisation(args, rng, iteration=i+1, wandb_logger=wandb_logger)
         final_video_paths.append(video_path)
         final_frames.extend(video_frames)
     
