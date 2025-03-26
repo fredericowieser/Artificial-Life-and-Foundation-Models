@@ -181,7 +181,7 @@ def main(args):
     current_prompt = args.prompts  # starting prompt
 
     # Initialize Gemma3Chat for feedback.
-    gemma = Gemma3Chat(token=os.environ["HF_TOKEN"]) # export HF_TOKEN=your_hf_token
+    gemma = Gemma3Chat()
 
     for i in range(args.N):
         print(f"Gemma iteration {i+1}/{args.N}")

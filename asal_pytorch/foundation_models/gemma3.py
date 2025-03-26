@@ -42,7 +42,6 @@ class Gemma3Chat:
 
     def __init__(
         self,
-        token,
         model_id="google/gemma-3-4b-it",
         device=None,
         torch_dtype=None,
@@ -74,7 +73,6 @@ class Gemma3Chat:
         self.model = Gemma3ForConditionalGeneration.from_pretrained(
             model_id,
             torch_dtype=self.torch_dtype,
-            token=token
         )
         if torch.__version__ >= "2.0":
             self.model = torch.compile(self.model)
