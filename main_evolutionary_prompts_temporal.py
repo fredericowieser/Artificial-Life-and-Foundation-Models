@@ -15,7 +15,7 @@ import asal.foundation_models as foundation_models
 from asal.rollout import rollout_simulation
 import asal.asal_metrics as asal_metrics
 import asal.util as util
-
+import csv
 # Gemma 3
 from asal_pytorch.foundation_models.gemma3 import Gemma3Chat
 
@@ -31,7 +31,7 @@ group.add_argument("--rollout_steps", type=int, default=None, help="number of ro
 group = parser.add_argument_group("evaluation")
 group.add_argument("--foundation_model", type=str, default="clip", help="foundation model to use")
 group.add_argument("--time_sampling", type=int, default=1, 
-                   help="images to render during one simulation rollout (we'll override dynamically)")
+                   help="images to render during one simulation rollout")
 group.add_argument("--prompts", type=str, default="a biological cell;two biological cells",
                    help="the initial prompts (we only use the first as the 'original' prompt #1)")
 group.add_argument("--coef_prompt", type=float, default=1., help="coefficient for ASAL prompt loss")
@@ -61,7 +61,7 @@ def load_best_params(save_dir):
     # data[0] => best_member, data[1] => best_fitness
     return data[0]
 
-def run_cma_for_iteration(
+def run_for_iteration(
     args,
     rng,
     iteration_idx,
@@ -69,7 +69,7 @@ def run_cma_for_iteration(
     init_params=None
 ):
     """
-    CMA-ES for iteration i. We do time_sampling = len(prompt_list).
+   We do time_sampling = len(prompt_list).
     That means each time chunk in the same rollout is matched to a different prompt.
     Returns best_params, video_frames, updated rng.
     """
@@ -198,6 +198,15 @@ def run_cma_for_iteration(
     video_frames = (rgb * 255).clip(0, 255).astype(np.uint8)
 
     return best_params, video_frames, rng
+def save_final_prompts_csv(all_prompts, folder):
+    """Saves the list of prompts to 'final_prompts.csv' in the given folder."""
+    csv_path = os.path.join(folder, "final_prompts.csv")
+    with open(csv_path, "w", newline="", encoding="utf-8") as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(["prompt"])
+        for p in all_prompts:
+            writer.writerow([p])
+    print(f"Final prompts saved at: {csv_path}")
 
 def main(args):
     """
@@ -226,7 +235,7 @@ def main(args):
         # We'll run 1 CMA-ES loop with time_sampling = i
         # i.e. each chunk in the same rollout matches one prompt
         prompts_for_i = all_prompts[:i]
-        best_params, video_frames, rng = run_cma_for_iteration(
+        best_params, video_frames, rng = run_for_iteration(
             args,
             rng=rng,
             iteration_idx=i,
@@ -257,6 +266,9 @@ def main(args):
 
         # Our final best_params becomes the init for next iteration
         current_params = best_params
+        if args.save_dir:
+            save_final_prompts_csv(all_prompts, args.save_dir)
+
 
 if __name__ == '__main__':
     main(parse_args())
