@@ -129,7 +129,7 @@ def run_optimisation(args,rng, iteration=0, wandb_logger=None):
     if args.wandb:
         params, _ = util.load_pkl(args.save_dir, "best")
         rng = jax.random.PRNGKey(args.seed)
-        wandb_logger.log_video(rng, params, f"iteration_{iteration}: {args.prompts}")
+        wandb_logger.log_video(rng=rng, params=params, name=f"iteration_{iteration}", caption=args.prompts)
         print(f"Iteration {iteration} video logged to wandb")
 
     if args.save_dir is not None: 

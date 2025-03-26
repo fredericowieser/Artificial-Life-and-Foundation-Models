@@ -73,8 +73,8 @@ class Gemma3Chat:
             model_id,
             torch_dtype=self.torch_dtype,
         )
-        if torch.__version__ >= "2.0":
-            self.model = torch.compile(self.model)
+        # if torch.__version__ >= "2.0":
+        #     self.model = torch.compile(self.model)
 
         self.model.to(self.device)
 
