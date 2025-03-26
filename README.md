@@ -8,6 +8,25 @@ A group project for COMP0258: Open-Endedness and General Intelligence, a course 
 
 - Assignment Instructions: https://docs.google.com/document/d/1KWJ4eVg3fOkxuVOcFGFFyC3k4vTbnthGplZYqAAAIlg/edit?tab=t.0
 
+## Details About The Project
+### Original Code and Previous Work
+In this code we look to build on some of the algorithms and research that was originally proposed in the paper "Automating the Search for Artificial Life with Foundation Models" ([Website](https://pub.sakana.ai/asal/)) by Akarsh Kumar, Chris Lu, Louis Kirsch, Yujin Tang, Kenneth O. Stanley, Phillip Isola, and David Ha.
+
+```
+@article{kumar2024asal,
+  title = {Automating the Search for Artificial Life with Foundation Models},
+  author = {Akarsh Kumar and Chris Lu and Louis Kirsch and Yujin Tang and Kenneth O. Stanley and Phillip Isola and David Ha},
+  year = {2024},
+  url = {https://asal.sakana.ai/}
+}
+```
+
+### This Code
+In this project we have code which relates to our group's work that uses a fork from the original code ([Original](https://github.com/SakanaAI/asal) | [Fork](https://github.com/hannaherlebach/asal/commits/main/)). This fork is a version of the original code that contains new ALife substrates, such as FlowLenia, and some other ideas that build quite nicely into the original code made using JAX.
+
+In order to use a larger and more diverse set of Foundation Models we have started developing a PyTorch version of the original code which is stored in `asal_pytorch` directory. For now we have only implemented the Lenia substrate and are using `evotorch` ([DOCS](https://docs.evotorch.ai/v0.5.1/)) and the `transformers` library in order to both use the wider range of foundation models available through hugging face and reduce overhead in casting JAX arrays to PyTorch tensors.
+
+
 ## How To Run Different Parts of Code
 
 Install everything you need with one script:
@@ -15,6 +34,20 @@ Install everything you need with one script:
 bash setup.sh
 ```
 You will then be prompted with some further instructions, to activate the environment and to add your Hugging Face details.
+
+If you want to add any packages simply
+
+```sh
+deactivate
+```
+
+Then add your package and a version if needed to the requirements.txt file. Then do...
+
+```sh
+bash setup.sh
+```
+
+and follow the notes again.
 
 ### Running Python Scripts
 
