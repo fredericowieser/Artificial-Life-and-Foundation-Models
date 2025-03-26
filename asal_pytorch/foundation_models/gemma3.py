@@ -1,3 +1,4 @@
+
 import torch
 from transformers import (
     AutoProcessor,
@@ -38,7 +39,7 @@ class Gemma3Chat:
     A condensed Gemma 3 chat-based replacement for the old LLaVA code.
     """
 
-    def _init_(
+    def __init__(
         self,
         model_id="google/gemma-3-4b-it",
         device=None,
@@ -72,7 +73,7 @@ class Gemma3Chat:
             model_id,
             torch_dtype=self.torch_dtype,
         )
-        if torch._version_ >= "2.0":
+        if torch.__version__ >= "2.0":
             self.model = torch.compile(self.model)
 
         self.model.to(self.device)
@@ -86,7 +87,7 @@ class Gemma3Chat:
         ):
         """
         Generates a description for a list of raw video frames (NumPy arrays).
-        Frames are sampled up to ⁠ max_images ⁠ and processed by the Gemma 3 model.
+        Frames are sampled up to `max_images` and processed by the Gemma 3 model.
         """
         if isinstance(video_frames, torch.Tensor):
             to_pil = ToPILImage()
