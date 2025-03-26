@@ -15,6 +15,6 @@ git+https://github.com/huggingface/transformers@v4.49.0-Gemma-3
 imageio
 einops
 tqdm
-wandb
+wandb[media]
 jax==0.5.3
 evosax==0.1.4
