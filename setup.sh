@@ -3,6 +3,12 @@ echo "Detecting operating system..."
 
 DEVICE_TYPE=""
 
+# Prevent Hugging Face Tokenizer from throwing warnings
+# when using tqdm. This is a workaround for the issue.
+# This issue shouldn't break anything, but it's better
+# to prevent the warnings from showing up.
+export TOKENIZERS_PARALLELISM=false
+
 # Detect OS and assign to DEVICE_TYPE
 case "$(uname -s)" in
     "Darwin")

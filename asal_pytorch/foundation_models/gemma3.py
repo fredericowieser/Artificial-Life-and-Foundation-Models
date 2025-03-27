@@ -1,16 +1,15 @@
+import os
 
 import torch
+from PIL import Image
 from transformers import (
     AutoProcessor,
-    FlaxCLIPModel,
-    Gemma3ForConditionalGeneration,
+    Gemma3ForConditionalGeneration
 )
-from tqdm.auto import tqdm
-from PIL import Image
-import os
-os.environ['XLA_PYTHON_CLIENT_PREALLOCATE'] = 'false'
+os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
 
 from torchvision.transforms import ToPILImage
+
 
 def clean_gemma_output(raw_text):
     """
@@ -34,6 +33,7 @@ def clean_gemma_output(raw_text):
     # Combine everything back into a single string
     return " ".join(cleaned_lines)
 
+
 class Gemma3Chat:
     """
     A condensed Gemma 3 chat-based replacement for the old LLaVA code.
@@ -53,14 +53,16 @@ class Gemma3Chat:
         :param max_context_length: Max token length for text + images. Defaults to 128k for Gemma 3 4B+.
         """
         if device is None:
-            device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+            device = (
+                "cuda"
+                if torch.cuda.is_available()
+                else "mps" if torch.backends.mps.is_available() else "cpu"
+            )
         self.device = torch.device(device)
-        
+
         # Enable faster GPU matrix multiplications
         if self.device.type == "cuda":
             torch.backends.cuda.matmul.allow_tf32 = True
-
-      
 
         if torch_dtype is None:
             torch_dtype = torch.bfloat16 if device == "cuda" else torch.float32
@@ -79,12 +81,12 @@ class Gemma3Chat:
         self.model.to(self.device)
 
     def describe_video(
-            self,
-            video_frames,
-            max_images=20,
-            extract_prompt="Describe the video.",
-            max_tokens=65,
-        ):
+        self,
+        video_frames,
+        max_images=20,
+        extract_prompt="Describe the video.",
+        max_tokens=65,
+    ):
         """
         Generates a description for a list of raw video frames (NumPy arrays).
         Frames are sampled up to `max_images` and processed by the Gemma 3 model.
@@ -103,16 +105,23 @@ class Gemma3Chat:
 
         messages = [
             {"role": "system", "content": [{"type": "text", "text": extract_prompt}]},
-            {"role": "user", "content": [{"type": "image", "image": img} for img in frames]},
+            {
+                "role": "user",
+                "content": [{"type": "image", "image": img} for img in frames],
+            },
         ]
         inputs = self.processor.apply_chat_template(
             messages,
             add_generation_prompt=True,
             tokenize=True,
             return_tensors="pt",
-            return_dict=True
+            return_dict=True,
         ).to(device=self.device)
 
         with torch.no_grad():
-            output_ids = self.model.generate(**inputs, max_new_tokens=max_tokens, do_sample=False)
-        return clean_gemma_output(self.processor.decode(output_ids[0], skip_special_tokens=True))
+            output_ids = self.model.generate(
+                **inputs, max_new_tokens=max_tokens, do_sample=False
+            )
+        return clean_gemma_output(
+            self.processor.decode(output_ids[0], skip_special_tokens=True)
+        )
