@@ -126,7 +126,13 @@ group.add_argument(
 )
 group.add_argument("--sigma", type=float, default=0.1, help="mutation rate")
 group.add_argument(
-    "--max_images_fm", type=int, default=1, help="number of iterations to run"
+    "--max_images_fm", type=int, default=1, help="max number of images to feed to our description model"
+)
+group.add_argument(
+    "--extract_prompt_txt_path",
+    type=str,
+    default=None,
+    help="path to a text file containing the extract prompt for the description model",
 )
 
 def parse_args(*args, **kwargs):
@@ -252,22 +258,33 @@ def main(args):
         # Run simulation with best parameters
         rollout_data = rollout_fn(rng, best_params)
 
-        # Convert frames from float [0,1] to uint8 [0,255] for video
+        # Convert frames from float [0,1] to uint8 [0,255] for video and save
         rgb_frames = np.array(rollout_data["rgb"])
         video_frames = (rgb_frames * 255).clip(0, 255).astype(np.uint8)
-
         video_path = os.path.join(args.save_dir, "video.mp4")
         imageio.mimsave(video_path, video_frames, fps=30)
         print(f"Video saved at: {video_path}")
 
-        # Clear the
-
-        # Calculate Similarity Score
+        # Use A Foundation Model To Generate A Description Of The Video
+        if args.extract_prompt_txt_path:
+            with open(os.path(args.extract_prompt_txt_path)) as f:
+                extract_prompt = f.read()
+        else:
+            extract_prompt = """
+        Describe the series of images in a very abstract
+        way and try and capture any high-level dynamic movements.
+        DO NOT mention or focus on any colours. ONLY Output a description of
+        the substrates behaviour in this case we are looking at lenia. The ways these
+        images are generated tend to be more vague and abstract. Such as 'a cell fighting another cell',
+        'an aggresive cell', 'a funghi'.
+        """
         description = Gemma3Chat().describe_video(
             video_frames,
             max_images=args.max_images_fm,
-            extract_prompt="Describe the video.",
+            extract_prompt=extract_prompt,
         )
+
+        # Calculate Similarity Score
         z_txt_gen = fm.embed_txt(description)
         similarity = calc_similarity_score(z_txt, z_txt_gen).item()
         print(f"Similarity Score: {similarity}")
