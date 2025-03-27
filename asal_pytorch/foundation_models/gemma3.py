@@ -3,8 +3,9 @@ import os
 import torch
 from PIL import Image
 from transformers import (
+    AutoConfig,
     AutoProcessor,
-    Gemma3ForConditionalGeneration
+    Gemma3ForConditionalGeneration,
 )
 os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
 
@@ -66,24 +67,28 @@ class Gemma3Chat:
 
         if torch_dtype is None:
             torch_dtype = torch.bfloat16 if device == "cuda" else torch.float32
+        print(f"Using {torch_dtype} for Gemma 3 model.")
         self.torch_dtype = torch_dtype
 
         self.max_context_length = max_context_length
-
+        
+        config = AutoConfig.from_pretrained(model_id)
+        config._attn_implementation = "eager"  # or "sdpa" to re-enable
         self.processor = AutoProcessor.from_pretrained(model_id)
         self.model = Gemma3ForConditionalGeneration.from_pretrained(
             model_id,
             torch_dtype=self.torch_dtype,
+            config=config,
         )
-        # if torch.__version__ >= "2.0":
-        #     self.model = torch.compile(self.model)
+        if torch.__version__ >= "2.0":
+            self.model = torch.compile(self.model)
 
         self.model.to(self.device)
 
     def describe_video(
         self,
         video_frames,
-        max_images=20,
+        max_images=10,
         extract_prompt="Describe the video.",
         max_tokens=65,
     ):
@@ -118,10 +123,11 @@ class Gemma3Chat:
             return_dict=True,
         ).to(device=self.device)
 
-        with torch.no_grad():
-            output_ids = self.model.generate(
-                **inputs, max_new_tokens=max_tokens, do_sample=False
-            )
+        with torch.backends.cuda.sdp_kernel(enable_flash=False, enable_mem_efficient=False, enable_math=True):
+            with torch.no_grad():
+                output_ids = self.model.generate(
+                    **inputs, max_new_tokens=max_tokens, do_sample=False
+                )
         return clean_gemma_output(
             self.processor.decode(output_ids[0], skip_special_tokens=True)
         )
