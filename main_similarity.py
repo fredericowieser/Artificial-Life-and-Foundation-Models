@@ -44,6 +44,7 @@ import asal.substrates as substrates
 import asal.util as util
 from asal.rollout import rollout_simulation
 from asal_pytorch.foundation_models import Gemma3Chat
+from asal_pytorch.asal_metrics import calc_reconstruction_loss
 
 parser = argparse.ArgumentParser()
 group = parser.add_argument_group("meta")
@@ -253,7 +254,7 @@ def main(args):
             extract_prompt="Describe the video.",
         )
         z_txt_gen = fm.embed_txt(description)
-        similarity = -asal_metrics.calc_reconstruction_loss(z_txt, z_txt_gen).item()
+        similarity = -calc_reconstruction_loss(z_txt, z_txt_gen).item()
         print(f"Similarity Score: {similarity}")
 
         # Save the given prompt, generated prompt and similarity score
