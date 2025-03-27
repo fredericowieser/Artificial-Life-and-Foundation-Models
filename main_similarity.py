@@ -37,6 +37,7 @@ import jax.numpy as jnp
 import numpy as np
 from jax.random import split
 from tqdm.auto import tqdm
+from einops import repeat
 
 import asal.asal_metrics as asal_metrics
 import asal.foundation_models as foundation_models
@@ -44,7 +45,21 @@ import asal.substrates as substrates
 import asal.util as util
 from asal.rollout import rollout_simulation
 from asal_pytorch.foundation_models import Gemma3Chat
-from asal_pytorch.asal_metrics import calc_reconstruction_loss
+
+def calc_similarity_score(z, z_desc):
+    """
+    Calculates the supervisted target score from ASAL.
+    The returned score should be minimized, since we add a minus sign here.
+    """
+    T, T2 = z.shape[0], z_desc.shape[0]
+    assert T % T2 == 0
+    z_desc = repeat(
+        z_desc, "T2 D -> (k T2) D", k=T // T2
+    )  # repeat to match shape, creating even intervals for each prompt
+
+    kernel = z_desc @ z.T  # T, T
+    return -jnp.diag(kernel).mean()
+
 
 parser = argparse.ArgumentParser()
 group = parser.add_argument_group("meta")
@@ -254,7 +269,7 @@ def main(args):
             extract_prompt="Describe the video.",
         )
         z_txt_gen = fm.embed_txt(description)
-        similarity = -calc_reconstruction_loss(z_txt_gen, z_txt).item()
+        similarity = calc_similarity_score(z_txt_gen, z_txt).item()
         print(f"Similarity Score: {similarity}")
 
         # Save the given prompt, generated prompt and similarity score
