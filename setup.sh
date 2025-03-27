@@ -73,6 +73,7 @@ uv venv --python 3.11
 echo "Installing dependencies..."
 uv pip install --upgrade pip
 uv pip install -r requirements.txt
+uv pip install "huggingface_hub[cli]"
 # Check if cuda is available, install jax with cuda support
 if nvcc --version &> /dev/null; then
     echo "CUDA is available. Installing JAX with CUDA support..."
