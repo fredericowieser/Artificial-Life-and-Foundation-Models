@@ -269,7 +269,7 @@ def main(args):
             extract_prompt="Describe the video.",
         )
         z_txt_gen = fm.embed_txt(description)
-        similarity = calc_similarity_score(z_txt_gen, z_txt).item()
+        similarity = calc_similarity_score(z_txt, z_txt_gen).item()
         print(f"Similarity Score: {similarity}")
 
         # Save the given prompt, generated prompt and similarity score
