@@ -179,17 +179,17 @@ def run_for_iteration(
             best_blob = jax.tree_map(lambda x: np.array(x), (es_state.best_member, es_state.best_fitness))
             util.save_pkl(args.save_dir, "best", best_blob)
 
-            # Save the given prompt, generated prompt and similarity score
-            with open(os.path.join(args.save_dir, "losses.csv"), "w") as f:
-                writer = csv.writer(f)
-                writer.writerow(["loss", "loss_prompt", "loss_softmax", "loss_oe"])
-                for d in data_log:
-                    writer.writerow([
-                        d["best_loss"],
-                        d["loss_dict"]["loss_prompt"],
-                        d["loss_dict"]["loss_softmax"],
-                        d["loss_dict"]["loss_oe"],
-                    ])
+    # Save the given prompt, generated prompt and similarity score
+    with open(os.path.join(args.save_dir, "losses.csv"), "w") as f:
+        writer = csv.writer(f)
+        writer.writerow(["loss", "loss_prompt", "loss_softmax", "loss_oe"])
+        for d in data_log:
+            writer.writerow([
+                d["best_loss"],
+                d["loss_dict"]["loss_prompt"],
+                d["loss_dict"]["loss_softmax"],
+                d["loss_dict"]["loss_oe"],
+            ])
 
     # after done with n_iters, load the best params from disk
     if args.save_dir:
