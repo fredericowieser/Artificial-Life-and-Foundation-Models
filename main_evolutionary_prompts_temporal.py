@@ -259,14 +259,21 @@ def main(args):
         # Save the given prompt, generated prompt and similarity score
         with open(os.path.join(args.save_dir, f"losses_{i}.csv"), "w") as f:
             writer = csv.writer(f)
-            writer.writerow(["loss", "loss_prompt", "loss_softmax", "loss_oe"])
-            for d in data_log:
-                writer.writerow([
-                    d["best_loss"],
-                    d["loss_dict"]["loss_prompt"],
-                    d["loss_dict"]["loss_softmax"],
-                    d["loss_dict"]["loss_oe"],
-                ])
+
+            # Dynamically extract all possible keys from the first entry
+            keys = list(data_log[0]["loss_dict"].keys())
+            header = ["iteration", "best_loss"] + keys
+            writer.writerow(header)
+
+            for idx, d in enumerate(data_log):
+                row = [idx, d["best_loss"]]
+                for key in keys:
+                    val = d["loss_dict"][key]
+                    if isinstance(val, np.ndarray):
+                        row.append(val.item() if val.size == 1 else val.flatten().tolist())
+                    else:
+                        row.append(val)
+                writer.writerow(row)
 
         # Show final video to Gemma => get new prompt
         instruction =(f"You just saw the video for iteration {i}, which used prompts so far: {all_prompts}. "
