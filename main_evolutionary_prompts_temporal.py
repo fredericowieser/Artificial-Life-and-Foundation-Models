@@ -3,6 +3,8 @@ os.environ['XLA_PYTHON_CLIENT_PREALLOCATE'] = 'false'
 import argparse
 from functools import partial
 import pickle
+import csv
+import wandb
 import jax
 import jax.numpy as jnp
 from jax.random import split
@@ -10,12 +12,14 @@ import numpy as np
 import evosax
 from tqdm.auto import tqdm
 import imageio
+
 import asal.substrates as substrates
 import asal.foundation_models as foundation_models
 from asal.rollout import rollout_simulation
 import asal.asal_metrics as asal_metrics
 import asal.util as util
-import csv
+from asal.wandb_util import WandbLogger
+
 # Gemma 3
 from asal_pytorch.foundation_models.gemma3 import Gemma3Chat
 
@@ -23,6 +27,7 @@ parser = argparse.ArgumentParser()
 group = parser.add_argument_group("meta")
 group.add_argument("--seed", type=int, default=0, help="the random seed")
 group.add_argument("--save_dir", type=str, default=None, help="path to save results to")
+group.add_argument("--wandb", action="store_true", help="log to wandb; default false unless flag is given")
 
 group = parser.add_argument_group("substrate")
 group.add_argument("--substrate", type=str, default='boids', help="name of the substrate")
@@ -69,7 +74,8 @@ def run_for_iteration(
     rng,
     iteration_idx,
     prompt_list,          # all prompts for iteration i
-    init_params=None
+    init_params=None,
+    wandb_logger=None
 ):
     """
    We do time_sampling = len(prompt_list).
@@ -84,6 +90,10 @@ def run_for_iteration(
     substrate = substrates.FlattenSubstrateParameters(substrate)
     if args.rollout_steps is None:
         args.rollout_steps = substrate.rollout_steps
+
+    # Initialise wandb logging
+    if args.wandb and iteration_idx==0:
+        wandb_logger.initialise_rollout(substrate=substrate)
 
     # 2) We'll have as many prompts as we have time chunks
     n_prompts = len(prompt_list)
@@ -179,6 +189,17 @@ def run_for_iteration(
             best_blob = jax.tree_map(lambda x: np.array(x), (es_state.best_member, es_state.best_fitness))
             util.save_pkl(args.save_dir, "best", best_blob)
 
+        # Wandb logging
+        if args.wandb:
+            wandb_logger.log_losses(di)
+
+    if args.wandb:
+        params, _ = util.load_pkl(args.save_dir, "best")
+        rng = jax.random.PRNGKey(args.seed)
+        caption = args.prompts if type(args.prompts) == str else ";".join(args.prompts)
+        wandb_logger.log_video(rng=rng, params=params, name=f"iteration_{iteration_idx}", caption=caption)
+        print(f"Iteration {iteration_idx} video logged to wandb")
+
     # after done with n_iters, load the best params from disk
     if args.save_dir:
         best_params = load_best_params(args.save_dir)
@@ -214,6 +235,10 @@ def save_final_prompts_csv(all_prompts, folder):
     print(f"Final prompts saved at: {csv_path}")
 
 
+# Show final video to Gemma => get new prompt
+EVOLVE_INSTRUCTION ="""You just saw the video for iteration {i}, which used prompts so far: {all_prompts}. "
+    "Suggest a NEW single prompt (no extra text) to expand upon this evolution next time."""
+
 def main(args):
     """
     1) We keep a dynamic list of prompts: all_prompts
@@ -222,6 +247,9 @@ def main(args):
     3) We produce a final video for iteration i, then feed it to Gemma for the next prompt.
     4) Over N iterations, we have i=1..N => 1 + 2 + ... + N total prompts appended across iterations.
     """
+
+    # Add evolve instruction to args for logging
+    args.evolve_instruction = EVOLVE_INSTRUCTION.format(current_prompt="current_prompt")
 
     gemma = Gemma3Chat()
 
@@ -235,6 +263,14 @@ def main(args):
     current_params = None
     final_video_paths = []
 
+    # Initialise wandb logging
+    if args.wandb:
+        wandb_logger = WandbLogger(project="alife-project", group="evolutionary-prompting", entity="ucl-asal", config=vars(args))
+        wandb_logger.initialise_prompt_logging()
+        wandb_logger.log_prompt(args.prompts)
+    else:
+        wandb_logger = None
+
     for i in range(1, args.N + 1):
         print(f"\n=== Starting iteration {i} ===")
         # We have i prompts so far: all_prompts[:i]
@@ -246,7 +282,8 @@ def main(args):
             rng=rng,
             iteration_idx=i,
             prompt_list=prompts_for_i,
-            init_params=current_params
+            init_params=current_params,
+            wandb_logger=wandb_logger
         )
 
         # Save final iteration video
@@ -275,10 +312,11 @@ def main(args):
                         row.append(val)
                 writer.writerow(row)
 
-        # Show final video to Gemma => get new prompt
-        instruction =(f"You just saw the video for iteration {i}, which used prompts so far: {all_prompts}. "
-            "Suggest a NEW single prompt (no extra text) to expand upon this evolution next time."
-        )
+        # # Show final video to Gemma => get new prompt
+        # instruction =(f"You just saw the video for iteration {i}, which used prompts so far: {all_prompts}. "
+        #     "Suggest a NEW single prompt (no extra text) to expand upon this evolution next time."
+        # )
+        instruction = EVOLVE_INSTRUCTION.format(i=i, all_prompts=all_prompts)
         new_prompt = gemma.describe_video(
             video_frames,
             extract_prompt=instruction,
@@ -287,6 +325,10 @@ def main(args):
             max_images=args.max_images,
         )
         print(f"[Iteration {i}] Gemma suggested => '{new_prompt}'")
+
+        # Log the prompt file and text to wandb
+        if args.wandb:
+            wandb_logger.log_prompt(new_prompt)  
 
         # Append new prompt to our list => next iteration will have i+1 total prompts
         all_prompts.append(new_prompt)
