@@ -46,6 +46,8 @@ group.add_argument("--n_iters", type=int, default=1000, help="CMA-ES steps per i
 group.add_argument("--sigma", type=float, default=0.1, help="mutation rate")
 group.add_argument("--N", type=int, default=3, help="total number of Gemma loops")
 group.add_argument("--temp", type=float, default=0.0, help="Temperature for sampling")
+group.add_argument("--max_images", type=int, default=10, help="Number of image to give to Foundation Model")
+
 
 def parse_args(*args, **kwargs):
     args = parser.parse_args(*args, **kwargs)
@@ -260,6 +262,7 @@ def main(args):
             extract_prompt=instruction,
             max_tokens=20,
             temperature=args.temp,
+            max_images=args.max_images,
         )
         print(f"[Iteration {i}] Gemma suggested => '{new_prompt}'")
 
