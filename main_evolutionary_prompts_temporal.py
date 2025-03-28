@@ -45,6 +45,7 @@ group.add_argument("--pop_size", type=int, default=16, help="population size for
 group.add_argument("--n_iters", type=int, default=1000, help="CMA-ES steps per iteration")
 group.add_argument("--sigma", type=float, default=0.1, help="mutation rate")
 group.add_argument("--N", type=int, default=3, help="total number of Gemma loops")
+group.add_argument("--temp", type=float, default=0.0, help="Temperature for sampling")
 
 def parse_args(*args, **kwargs):
     args = parser.parse_args(*args, **kwargs)
@@ -258,7 +259,7 @@ def main(args):
             video_frames,
             extract_prompt=instruction,
             max_tokens=20,
-            temperature=1.0,
+            temperature=args.temp,
         )
         print(f"[Iteration {i}] Gemma suggested => '{new_prompt}'")
 
@@ -269,6 +270,13 @@ def main(args):
         current_params = best_params
         if args.save_dir:
             save_final_prompts_csv(all_prompts, args.save_dir)
+
+        # Save the given prompt, generated prompt and similarity score
+        with open(os.path.join(args.save_dir, "results.txt"), "w") as f:
+            # Write all args
+            f.write("Arguments:\n")
+            for arg, value in vars(args).items():
+                f.write(f"{arg}: {value}\n")
 
 
 if __name__ == '__main__':
