@@ -92,6 +92,7 @@ class Gemma3Chat:
         max_images=10,
         extract_prompt="Describe the video.",
         max_tokens=65,
+        temperature=0.5,
     ):
         """
         Generates a description for a list of raw video frames (NumPy arrays).
@@ -128,10 +129,11 @@ class Gemma3Chat:
             with torch.no_grad():
                 output_ids = self.model.generate(
                     **inputs, 
-                    max_new_tokens=max_tokens, 
-                    do_sample=False, 
+                    max_new_tokens=max_tokens,
+                    temperature=temperature,
+                    do_sample=False,
                     top_p=None,
-                    top_k=None
+                    top_k=None,
                 )
         return clean_gemma_output(
             self.processor.decode(output_ids[0], skip_special_tokens=True)

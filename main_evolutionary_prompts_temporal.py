@@ -257,7 +257,8 @@ def main(args):
         new_prompt = gemma.describe_video(
             video_frames,
             extract_prompt=instruction,
-            max_tokens=20
+            max_tokens=20,
+            temperature=1.0,
         )
         print(f"[Iteration {i}] Gemma suggested => '{new_prompt}'")
 
