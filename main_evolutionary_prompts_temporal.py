@@ -1,4 +1,5 @@
 import os
+import csv
 os.environ['XLA_PYTHON_CLIENT_PREALLOCATE'] = 'false'
 import argparse
 from functools import partial
@@ -293,23 +294,33 @@ def main(args):
             print(f"[Iteration {i}] final video saved at: {video_path_i}")
             final_video_paths.append(video_path_i)
 
-        # Save the given prompt, generated prompt and similarity score
+        # First pass to collect all flat keys
+        flat_keys = []
+        for key in data_log[0]["loss_dict"].keys():
+            val = data_log[0]["loss_dict"][key]
+            if isinstance(val, np.ndarray) and val.ndim > 0:
+                flat_keys.extend([f"{key}_{i}" for i in range(val.size)])
+            else:
+                flat_keys.append(key)
+
+        # Write the header
+        header = ["iteration", "best_loss"] + flat_keys
+
         with open(os.path.join(args.save_dir, f"losses_{i}.csv"), "w") as f:
             writer = csv.writer(f)
-
-            # Dynamically extract all possible keys from the first entry
-            keys = list(data_log[0]["loss_dict"].keys())
-            header = ["iteration", "best_loss"] + keys
             writer.writerow(header)
 
             for idx, d in enumerate(data_log):
                 row = [idx, d["best_loss"]]
-                for key in keys:
+
+                for key in d["loss_dict"]:
                     val = d["loss_dict"][key]
                     if isinstance(val, np.ndarray):
-                        row.append(val.item() if val.size == 1 else val.flatten().tolist())
+                        val = val.flatten()
+                        row.extend(val.tolist())
                     else:
                         row.append(val)
+
                 writer.writerow(row)
 
         # # Show final video to Gemma => get new prompt
