@@ -237,8 +237,8 @@ def save_final_prompts_csv(all_prompts, folder):
 
 
 # Show final video to Gemma => get new prompt
-EVOLVE_INSTRUCTION ="""You just saw the video for iteration {i}, which used prompts so far: {all_prompts}. "
-    "Suggest a NEW single prompt (no extra text) to expand upon this evolution next time."""
+# EVOLVE_INSTRUCTION ="""You just saw the video for iteration {i}, which used prompts so far: {all_prompts}. "
+#    "Suggest a NEW single prompt (no extra text) to expand upon this evolution next time."""
 
 def main(args):
     """
@@ -250,7 +250,7 @@ def main(args):
     """
 
     # Add evolve instruction to args for logging
-    args.evolve_instruction = EVOLVE_INSTRUCTION.format(current_prompt="current_prompt")
+    # args.evolve_instruction = EVOLVE_INSTRUCTION.format(current_prompt="current_prompt")
 
     gemma = Gemma3Chat()
 
@@ -265,12 +265,12 @@ def main(args):
     final_video_paths = []
 
     # Initialise wandb logging
-    if args.wandb:
-        wandb_logger = WandbLogger(project="alife-project", group="evolutionary-prompting", entity="ucl-asal", config=vars(args))
-        wandb_logger.initialise_prompt_logging()
-        wandb_logger.log_prompt(args.prompts)
-    else:
-        wandb_logger = None
+    # if args.wandb:
+    #     wandb_logger = WandbLogger(project="alife-project", group="evolutionary-prompting", entity="ucl-asal", config=vars(args))
+    #     wandb_logger.initialise_prompt_logging()
+    #     wandb_logger.log_prompt(args.prompts)
+    # else:
+    #     wandb_logger = None
 
     for i in range(1, args.N + 1):
         print(f"\n=== Starting iteration {i} ===")
@@ -284,7 +284,7 @@ def main(args):
             iteration_idx=i,
             prompt_list=prompts_for_i,
             init_params=current_params,
-            wandb_logger=wandb_logger
+            # wandb_logger=wandb_logger
         )
 
         # Save final iteration video
@@ -324,10 +324,10 @@ def main(args):
                 writer.writerow(row)
 
         # # Show final video to Gemma => get new prompt
-        # instruction =(f"You just saw the video for iteration {i}, which used prompts so far: {all_prompts}. "
-        #     "Suggest a NEW single prompt (no extra text) to expand upon this evolution next time."
-        # )
-        instruction = EVOLVE_INSTRUCTION.format(i=i, all_prompts=all_prompts)
+        instruction =(f"You just saw the video for iteration {i}, which used prompts so far: {all_prompts}. "
+            "Suggest a NEW single prompt (no extra text) to expand upon this evolution next time."
+        )
+        instruction = instruction.format(i=i, all_prompts=all_prompts)
         new_prompt = gemma.describe_video(
             video_frames,
             extract_prompt=instruction,
@@ -338,8 +338,8 @@ def main(args):
         print(f"[Iteration {i}] Gemma suggested => '{new_prompt}'")
 
         # Log the prompt file and text to wandb
-        if args.wandb:
-            wandb_logger.log_prompt(new_prompt)  
+        # if args.wandb:
+        #     wandb_logger.log_prompt(new_prompt)  
 
         # Append new prompt to our list => next iteration will have i+1 total prompts
         all_prompts.append(new_prompt)
