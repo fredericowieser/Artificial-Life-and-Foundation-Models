@@ -3,6 +3,12 @@ echo "Detecting operating system..."
 
 DEVICE_TYPE=""
 
+# Prevent Hugging Face Tokenizer from throwing warnings
+# when using tqdm. This is a workaround for the issue.
+# This issue shouldn't break anything, but it's better
+# to prevent the warnings from showing up.
+export TOKENIZERS_PARALLELISM=false
+
 # Detect OS and assign to DEVICE_TYPE
 case "$(uname -s)" in
     "Darwin")
@@ -30,7 +36,7 @@ echo "Operating system detected: $DEVICE_TYPE"
 
 # Initialize the submodules
 echo "Initializing submodules..."
-git submodule init && git submodule update
+git submodule update --init --recursive
 echo "Submodules initialized."
 
 # Install the dependencies using uv
@@ -67,6 +73,7 @@ uv venv --python 3.11
 echo "Installing dependencies..."
 uv pip install --upgrade pip
 uv pip install -r requirements.txt
+uv pip install "huggingface_hub[cli]"
 # Check if cuda is available, install jax with cuda support
 if nvcc --version &> /dev/null; then
     echo "CUDA is available. Installing JAX with CUDA support..."

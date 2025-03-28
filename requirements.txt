@@ -18,3 +18,4 @@ tqdm
 wandb[media]
 jax==0.5.3
 evosax==0.1.4
+huggingface_hub[cli]

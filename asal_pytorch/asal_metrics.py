@@ -1,6 +1,7 @@
 import torch
 import torch.nn.functional as F
 
+
 def calc_supervised_target_score(z: torch.Tensor, z_txt: torch.Tensor) -> torch.Tensor:
     T, D = z.shape
     T2 = z_txt.shape[0]
@@ -9,7 +10,9 @@ def calc_supervised_target_score(z: torch.Tensor, z_txt: torch.Tensor) -> torch.
     # Repeat z_txt so that it matches shape T
     k = T // T2
     # shape -> (T, D)
-    z_txt_repeated = z_txt.repeat((k, 1))  # or z_txt.unsqueeze(0).repeat(k,1,1).view(-1,D)
+    z_txt_repeated = z_txt.repeat(
+        (k, 1)
+    )  # or z_txt.unsqueeze(0).repeat(k,1,1).view(-1,D)
 
     # Compute kernel = z_txt_repeated @ z^T => shape (T, T)
     kernel = torch.matmul(z_txt_repeated, z.t())
@@ -18,7 +21,7 @@ def calc_supervised_target_score(z: torch.Tensor, z_txt: torch.Tensor) -> torch.
     return -torch.diagonal(kernel, 0).mean()
 
 
-def calc_reconstruction_loss(z_txt: torch.Tensor, z_desc: torch.Tensor) -> torch.Tensor:
+def calc_reconstruction_loss(z_desc: torch.Tensor, z_txt: torch.Tensor) -> torch.Tensor:
     T, D = z_desc.shape
     T2 = z_txt.shape[0]
     assert T % T2 == 0, f"Expected T multiple of T2, got T={T}, T2={T2}"
@@ -32,9 +35,7 @@ def calc_reconstruction_loss(z_txt: torch.Tensor, z_desc: torch.Tensor) -> torch
 
 
 def calc_supervised_target_softmax_score(
-    z: torch.Tensor,
-    z_txt: torch.Tensor,
-    temperature_softmax: float = 0.01
+    z: torch.Tensor, z_txt: torch.Tensor, temperature_softmax: float = 0.01
 ) -> torch.Tensor:
     T, D = z.shape
     T2 = z_txt.shape[0]
