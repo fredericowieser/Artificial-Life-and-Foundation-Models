@@ -131,7 +131,7 @@ class Gemma3Chat:
                     **inputs, 
                     max_new_tokens=max_tokens,
                     temperature=temperature,
-                    do_sample=False,
+                    do_sample=True,
                     top_p=None,
                     top_k=None,
                 )
