@@ -126,7 +126,11 @@ class Gemma3Chat:
         with torch.backends.cuda.sdp_kernel(enable_flash=False, enable_mem_efficient=False, enable_math=True):
             with torch.no_grad():
                 output_ids = self.model.generate(
-                    **inputs, max_new_tokens=max_tokens, do_sample=False
+                    **inputs, 
+                    max_new_tokens=max_tokens, 
+                    do_sample=False, 
+                    top_p=None,
+                    top_k=None
                 )
         return clean_gemma_output(
             self.processor.decode(output_ids[0], skip_special_tokens=True)
