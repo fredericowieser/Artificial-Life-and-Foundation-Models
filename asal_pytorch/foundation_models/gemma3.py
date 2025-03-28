@@ -8,6 +8,7 @@ from transformers import (
     Gemma3ForConditionalGeneration,
 )
 os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
 from torchvision.transforms import ToPILImage
 
