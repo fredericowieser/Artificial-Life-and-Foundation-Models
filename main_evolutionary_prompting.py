@@ -75,7 +75,7 @@ def run_optimisation(args,rng, iteration=0, wandb_logger=None):
     z_txt = fm.embed_txt(prompts) # P D
 
     # Initialise wandb logging
-    if args.wandb:
+    if args.wandb and iteration==0:
         wandb_logger.initialise_rollout(substrate=substrate)
 
     rng = jax.random.PRNGKey(args.seed)
