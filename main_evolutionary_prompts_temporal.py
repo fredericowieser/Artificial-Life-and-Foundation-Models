@@ -179,18 +179,6 @@ def run_for_iteration(
             best_blob = jax.tree_map(lambda x: np.array(x), (es_state.best_member, es_state.best_fitness))
             util.save_pkl(args.save_dir, "best", best_blob)
 
-    # Save the given prompt, generated prompt and similarity score
-    with open(os.path.join(args.save_dir, "losses.csv"), "w") as f:
-        writer = csv.writer(f)
-        writer.writerow(["loss", "loss_prompt", "loss_softmax", "loss_oe"])
-        for d in data_log:
-            writer.writerow([
-                d["best_loss"],
-                d["loss_dict"]["loss_prompt"],
-                d["loss_dict"]["loss_softmax"],
-                d["loss_dict"]["loss_oe"],
-            ])
-
     # after done with n_iters, load the best params from disk
     if args.save_dir:
         best_params = load_best_params(args.save_dir)
@@ -212,7 +200,9 @@ def run_for_iteration(
     rgb = np.array(rollout_data['rgb'])
     video_frames = (rgb * 255).clip(0, 255).astype(np.uint8)
 
-    return best_params, video_frames, rng
+    return best_params, video_frames, rng, data_log
+
+
 def save_final_prompts_csv(all_prompts, folder):
     """Saves the list of prompts to 'final_prompts.csv' in the given folder."""
     csv_path = os.path.join(folder, "final_prompts.csv")
@@ -222,6 +212,7 @@ def save_final_prompts_csv(all_prompts, folder):
         for p in all_prompts:
             writer.writerow([p])
     print(f"Final prompts saved at: {csv_path}")
+
 
 def main(args):
     """
@@ -250,7 +241,7 @@ def main(args):
         # We'll run 1 CMA-ES loop with time_sampling = i
         # i.e. each chunk in the same rollout matches one prompt
         prompts_for_i = all_prompts[:i]
-        best_params, video_frames, rng = run_for_iteration(
+        best_params, video_frames, rng, data_log = run_for_iteration(
             args,
             rng=rng,
             iteration_idx=i,
@@ -264,6 +255,18 @@ def main(args):
             imageio.mimsave(video_path_i, video_frames, fps=30, codec="libx264")
             print(f"[Iteration {i}] final video saved at: {video_path_i}")
             final_video_paths.append(video_path_i)
+
+        # Save the given prompt, generated prompt and similarity score
+        with open(os.path.join(args.save_dir, f"losses_{i}.csv"), "w") as f:
+            writer = csv.writer(f)
+            writer.writerow(["loss", "loss_prompt", "loss_softmax", "loss_oe"])
+            for d in data_log:
+                writer.writerow([
+                    d["best_loss"],
+                    d["loss_dict"]["loss_prompt"],
+                    d["loss_dict"]["loss_softmax"],
+                    d["loss_dict"]["loss_oe"],
+                ])
 
         # Show final video to Gemma => get new prompt
         instruction =(f"You just saw the video for iteration {i}, which used prompts so far: {all_prompts}. "
