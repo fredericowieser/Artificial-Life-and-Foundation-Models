@@ -200,7 +200,9 @@ def run_for_iteration(
     rgb = np.array(rollout_data['rgb'])
     video_frames = (rgb * 255).clip(0, 255).astype(np.uint8)
 
-    return best_params, video_frames, rng
+    return best_params, video_frames, rng, data_log
+
+
 def save_final_prompts_csv(all_prompts, folder):
     """Saves the list of prompts to 'final_prompts.csv' in the given folder."""
     csv_path = os.path.join(folder, "final_prompts.csv")
@@ -210,6 +212,7 @@ def save_final_prompts_csv(all_prompts, folder):
         for p in all_prompts:
             writer.writerow([p])
     print(f"Final prompts saved at: {csv_path}")
+
 
 def main(args):
     """
@@ -238,7 +241,7 @@ def main(args):
         # We'll run 1 CMA-ES loop with time_sampling = i
         # i.e. each chunk in the same rollout matches one prompt
         prompts_for_i = all_prompts[:i]
-        best_params, video_frames, rng = run_for_iteration(
+        best_params, video_frames, rng, data_log = run_for_iteration(
             args,
             rng=rng,
             iteration_idx=i,
@@ -252,6 +255,25 @@ def main(args):
             imageio.mimsave(video_path_i, video_frames, fps=30, codec="libx264")
             print(f"[Iteration {i}] final video saved at: {video_path_i}")
             final_video_paths.append(video_path_i)
+
+        # Save the given prompt, generated prompt and similarity score
+        with open(os.path.join(args.save_dir, f"losses_{i}.csv"), "w") as f:
+            writer = csv.writer(f)
+
+            # Dynamically extract all possible keys from the first entry
+            keys = list(data_log[0]["loss_dict"].keys())
+            header = ["iteration", "best_loss"] + keys
+            writer.writerow(header)
+
+            for idx, d in enumerate(data_log):
+                row = [idx, d["best_loss"]]
+                for key in keys:
+                    val = d["loss_dict"][key]
+                    if isinstance(val, np.ndarray):
+                        row.append(val.item() if val.size == 1 else val.flatten().tolist())
+                    else:
+                        row.append(val)
+                writer.writerow(row)
 
         # Show final video to Gemma => get new prompt
         instruction =(f"You just saw the video for iteration {i}, which used prompts so far: {all_prompts}. "
