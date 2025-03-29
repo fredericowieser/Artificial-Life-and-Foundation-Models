@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>D3 Horizontal Tree with Embedded Videos</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+    }
+    .link {
+      fill: none;
+      stroke: #ccc;
+      stroke-width: 1.5px;
+    }
+    .node circle {
+      fill: #999;
+      stroke: #555;
+      stroke-width: 1.5px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Branching Tree Visualization</h1>
+<svg id="tree-svg"></svg>
+
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script>
+  d3.json("branches.json").then(function(data) {
+    // Increase overall dimensions for a larger canvas
+    const margin = {top: 20, right: 400, bottom: 20, left: 120},
+          width = 2000 - margin.left - margin.right,
+          height = 2000 - margin.top - margin.bottom;
+
+    // Create the SVG container
+    const svg = d3.select("#tree-svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Use a horizontal tree layout:
+    // By convention, for a horizontal tree, we set the tree size to [height, width]
+    // and use d.y for horizontal position.
+    const treemap = d3.tree().size([height, width]);
+
+    // Convert the data to a D3 hierarchy
+    let root = d3.hierarchy(data, d => d.children);
+
+    // Compute the new tree layout.
+    root = treemap(root);
+
+    // Create links between nodes.
+    const link = svg.selectAll(".link")
+      .data(root.descendants().slice(1))
+      .enter().append("path")
+        .attr("class", "link")
+        .attr("d", d => {
+          return "M" + d.y + "," + d.x +
+                 "C" + (d.parent.y + 100) + "," + d.x +
+                 " " + (d.parent.y + 100) + "," + d.parent.x +
+                 " " + d.parent.y + "," + d.parent.x;
+        });
+
+    // Create nodes.
+    const node = svg.selectAll(".node")
+      .data(root.descendants())
+      .enter().append("g")
+        .attr("class", "node")
+        .attr("transform", d => `translate(${d.y},${d.x})`);
+
+    // Append a small circle for each node.
+    node.append("circle")
+      .attr("r", 5);
+
+    // Append a foreignObject to embed text and video.
+    // Here, we set each node's foreignObject to 400x300.
+    node.append("foreignObject")
+      .attr("width", 300)
+      .attr("height", 200)
+      // Adjust horizontal offset: if the node has children, place the box to the left; otherwise to the right.
+      .attr("x", -100)
+      .attr("y", -100)
+      .html(d => {
+        let html = `<div xmlns="http://www.w3.org/1999/xhtml" 
+                        style="width:400px; height:300px; background-color:#fff; border:1px solid #ccc; padding:10px; overflow:auto;">
+                        <p style="margin:0; font-size:14px; font-weight:bold; color:#333;">${d.data.name}</p>`;
+        if (d.data.video_path) {
+          // Embed the video inside the box. Adjust width to fit (e.g., 380px).
+          html += `<video src="${d.data.video_path}" width="150" controls style="margin-top:10px;"></video>`;
+        }
+        html += `</div>`;
+        return html;
+      });
+  }).catch(function(error) {
+    console.error("Error loading tree.json:", error);
+  });
+</script>
+
+</body>
+</html>

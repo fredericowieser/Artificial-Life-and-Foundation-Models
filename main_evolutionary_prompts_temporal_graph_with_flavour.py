@@ -21,7 +21,7 @@ import tempfile
 import glob
 import shutil
 import os
-import ffmpeg
+
 from PIL import Image, ImageDraw, ImageFont
 import os
 # Gemma 3
@@ -76,23 +76,23 @@ def load_best_params(save_dir):
         data = pickle.load(f)
     # data[0] => best_member, data[1] => best_fitness
     return data[0]
-def get_unique_prompts(gemma,video_frames,instruction,S,max_retries=10):
+def get_unique_prompts(gemma,video_frames,instruction,S):
     unique_prompts=[]
     retries=0
-    while len(unique_prompts)<S and retries<max_retries:
+    while len(unique_prompts)<S:
         new_prompt=gemma.describe_video(
             video_frames,
             extract_prompt=instruction,
             max_tokens=20,
         ).strip()
         norm_prompt=new_prompt.lower()
-        if norm_prompt not in [p.lower() for p in unique_prompts]:
-            unique_prompts.append(new_prompt)
-        else:
-            print(f"Duplicate prompt detected: '{new_prompt}'. Retrying...")
-        retries+=1
-    if len(unique_prompts)<S:
-        print("Warning: Could not generate S unique prompts after max retries.")
+        
+        unique_prompts.append(new_prompt)
+        # else:
+        #     print(f"Duplicate prompt detected: '{new_prompt}'. Retrying...")
+        # retries+=1
+    # if len(unique_prompts)<S:
+    #     print("Warning: Could not generate S unique prompts after max retries.")
     return unique_prompts
 
 
@@ -251,7 +251,8 @@ def main(args):
     tilt_dict = {
         1: ["aggressive", "defensive"],
         2: ["expansive", "conservative"],
-        3: ["chaotic", "serene"]
+        3: ["chaotic", "serene"],
+        4: [" "," "]
     }
     
     gemma = Gemma3Chat()

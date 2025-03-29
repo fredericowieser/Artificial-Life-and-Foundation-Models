@@ -1,0 +1,9 @@
+branch_index,prompt_chain
+0,a catepillar ; Blood splatter. ; “Blood-soaked caterpillar tracks.” ; Blood-soaked caterpillar chitin.
+1,"a catepillar ; Blood splatter. ; “Blood-soaked caterpillar tracks.” ; Blood-soaked caterpillar tracks, viscous."
+2,"a catepillar ; Blood splatter. ; Blood, caterpillar tracks. ; Blood, caterpillar scales."
+3,"a catepillar ; Blood splatter. ; Blood, caterpillar tracks. ; Blood, caterpillar excrement."
+4,"a catepillar ; blood splatter ; Blood splatter, decaying caterpillar ; Blood splatter, decaying caterpillar, visceral texture"
+5,"a catepillar ; blood splatter ; Blood splatter, decaying caterpillar ; Blood splatter, decaying caterpillar, viscous fluid"
+6,"a catepillar ; blood splatter ; **""Blood splatter, decaying caterpillar husk""** ; **""Blood splatter, decaying caterpillar cocoon, fungal growth""**"
+7,"a catepillar ; blood splatter ; **""Blood splatter, decaying caterpillar husk""** ; **""Blood splatter, decaying caterpillar thorax, glistening chitin""**"
