@@ -267,7 +267,7 @@ def main(args):
     # Setup wandb logging
     if args.wandb:
         run = wandb.init(project="alife-project", group="evolutionary-prompting", entity="ucl-asal", config=vars(args))
-        table = wandb.Table(columns=["prompts"], data=[args.prompts])
+        table = wandb.Table(columns=["prompts"], data=[[args.prompts]])
 
     gemma = Gemma3Chat()
 
