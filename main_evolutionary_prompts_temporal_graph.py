@@ -22,7 +22,8 @@ import glob
 import shutil
 import os
 import ffmpeg
-
+from PIL import Image, ImageDraw, ImageFont
+import os
 # Gemma 3
 from asal_pytorch.foundation_models.gemma3 import Gemma3Chat
 def sanitize_filename(s):
@@ -331,102 +332,8 @@ def main(args):
             for idx, branch in enumerate(branches):
                 writer.writerow([idx, " ; ".join(branch["prompt_chain"])])
         print(f"Final prompt chains saved at: {final_csv_path}")
-
         
-
-    def create_labeled_video_ffmpeg(input_video, prompt_chain, output_video, fontfile=None):
-        """
-        Overlays the prompt_chain (list of strings) onto input_video using FFmpeg's drawtext,
-        and saves the result to output_video.
-        """
-        # Join the prompt chain into a single string and escape special characters.
-        text = " ; ".join(prompt_chain).replace(":", "\\:")
-        drawtext_args = {
-            "text": text,
-            "fontcolor": "white",
-            "fontsize": "24",
-            "x": "(w-text_w)/2",
-            "y": "h-200",
-            "shadowcolor": "black",
-            "shadowx": "2",
-            "shadowy": "2",
-        }
-        if fontfile is not None:
-            drawtext_args["fontfile"] = fontfile
-
-        try:
-            (
-                ffmpeg
-                .input(input_video)
-                .filter('drawtext', **drawtext_args)
-                .output(output_video, codec='libx264', pix_fmt='yuv420p', preset='veryfast')
-                .overwrite_output()
-                .run(quiet=True)
-            )
-        except ffmpeg.Error as e:
-            print("FFmpeg error:", e)
-            raise
-
-    def create_final_summary_video_ffmpeg(base_save_dir, final_meta, output_path="final_summary.mp4", fps=30, fontfile=None):
-        """
-        Traverses the base_save_dir recursively for all branch videos named
-        "video_meta_{final_meta}.mp4", overlays each with its prompt chain (read from prompt_chain.txt),
-        and concatenates all the labeled videos into a single summary MP4.
-        """
-        # Find all final branch videos via glob.
-        pattern = os.path.join(base_save_dir, '**', f"video_meta_{final_meta}.mp4")
-        video_paths = glob.glob(pattern, recursive=True)
-        if not video_paths:
-            print("No final branch videos found.")
-            return
-
-        # Create a temporary directory to store labeled videos.
-        temp_dir = tempfile.mkdtemp(prefix="labeled_videos_")
-        labeled_files = []
-        for idx, video_path in enumerate(sorted(video_paths)):
-            # Look for the prompt chain text in the same folder.
-            branch_dir = os.path.dirname(video_path)
-            chain_path = os.path.join(branch_dir, "prompt_chain.txt")
-            if os.path.exists(chain_path):
-                with open(chain_path, "r", encoding="utf-8") as f:
-                    # Expecting prompts separated by " ; "
-                    prompt_chain = f.read().strip().split(" ; ")
-            else:
-                prompt_chain = []
-            temp_output = os.path.join(temp_dir, f"labeled_{idx}.mp4")
-            print(f"Processing {video_path} with prompt chain: {prompt_chain}")
-            create_labeled_video_ffmpeg(video_path, prompt_chain, temp_output, fontfile=fontfile)
-            labeled_files.append(temp_output)
-
-        # Create a file list for FFmpeg concat demuxer.
-        concat_file = os.path.join(temp_dir, "concat_list.txt")
-        with open(concat_file, "w", encoding="utf-8") as f:
-            for file in labeled_files:
-                f.write(f"file '{os.path.abspath(file)}'\n")
-        
-        try:
-            (
-                ffmpeg
-                .input(concat_file, format='concat', safe=0)
-                .output(output_path, codec='libx264', pix_fmt='yuv420p', r=fps)
-                .overwrite_output()
-                .run(quiet=True)
-            )
-            print(f"Final summary video saved at: {output_path}")
-        except ffmpeg.Error as e:
-            print("FFmpeg concat error:", e)
-            raise
-
-        # Clean up temporary files.
-        shutil.rmtree(temp_dir)
-
-    # Assume that 'args.save_dir' is your base output folder,
-    # and that you ran meta_iterations = args.N (the final meta iteration number).
-    final_meta = args.N  # final meta iteration number
-    summary_video_path = os.path.join(args.save_dir, "final_summary.mp4")
-    create_final_summary_video_ffmpeg(args.save_dir, final_meta, output_path=summary_video_path, fps=30)
-
-
+    
 
 if __name__ == '__main__':
     main(parse_args())

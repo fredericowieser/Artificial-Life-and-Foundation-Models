@@ -1,0 +1,61 @@
+{
+  "name": "a catepillar",
+  "video_path": "/a_catepillar/video_meta_1.mp4",
+  "children": [
+    {
+      "name": "Spirals",
+      "video_path": "/a_catepillar/spirals/video_meta_2.mp4",
+      "children": [
+        {
+          "name": "Roots",
+          "video_path": "/a_catepillar/spirals/roots/video_meta_3.mp4",
+          "children": [
+            {
+              "name": "Clusters",
+              "video_path": "/a_catepillar/spirals/roots/clusters/video_meta_4.mp4",
+              "children": []
+            }
+          ]
+        },
+        {
+          "name": "Bio-spines",
+          "video_path": "/a_catepillar/spirals/bio-spines/video_meta_3.mp4",
+          "children": [
+            {
+              "name": "Bio-buds",
+              "video_path": "/a_catepillar/spirals/bio-spines/bio-clusters/video_meta_4.mp4",
+              "children": []
+            },
+            {
+              "name": "Bio-clusters",
+              "video_path": "/a_catepillar/spirals/bio-spines/bio-buds/video_meta_4.mp4",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Segmented limbs",
+      "video_path": "/a_catepillar/segmented_limbs/video_meta_2.mp4",
+      "children": [
+        {
+          "name": "Appendages",
+          "video_path": "/a_catepillar/segmented_limbs/appendages/video_meta_3.mp4",
+          "children": [
+            {
+              "name": "Color",
+              "video_path": "/a_catepillar/segmented_limbs/appendages/coloration/video_meta_4.mp4",
+              "children": []
+            },
+            {
+              "name": "Coloration",
+              "video_path": "/a_catepillar/segmented_limbs/appendages/color/video_meta_4.mp4",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

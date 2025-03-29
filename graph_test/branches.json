@@ -1,0 +1,16 @@
+{
+  "name": "a virus", 
+  "video_path": "a_virus/video_meta_1.mp4",
+  "children": [
+    {
+      "name": "“a virus evolving into a complex, multi-layered organism with internal structures and pulsating light.”",
+      "video_path": "/a_virus/a_virus_evolving_into_a_digital_entity/video_meta_2.mp4",
+      "children": []
+    },
+    {
+      "name": "“A virus evolving into a complex, iridescent, bioluminescent organism.”",
+      "video_path": "/a_virus/a_virus_evolving_into_a_swarm_of_iridescent_pulsat/video_meta_2.mp4",
+      "children": []
+    }
+  ]
+}
