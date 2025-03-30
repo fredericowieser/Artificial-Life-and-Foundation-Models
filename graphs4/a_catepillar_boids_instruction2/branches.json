@@ -1,0 +1,39 @@
+{
+    "name": "a catepillar",
+    "video_path": "a_catepillar/video_meta_1_boids.mp4",
+    "children": [
+      {
+        "name": "“Spiky caterpillar”",
+        "video_path": "a_catepillar/spiky_caterpillar/video_meta_2.mp4",
+        "children": [
+          {
+            "name": "“Spiky caterpillar, fractal bloom”",
+            "video_path": "a_catepillar/spiky_caterpillar/spiky_caterpillar_fractal_bloom/video_meta_3.mp4",
+            "children": []
+          },
+          {
+            "name": "“Spiky moth”",
+            "video_path": "a_catepillar/spiky_caterpillar/spiky_moth/video_meta_3.mp4",
+            "children": []
+          }
+        ]
+      },
+      {
+        "name": "“Worm.”",
+        "video_path": "a_catepillar/worm/video_meta_2.mp4",
+        "children": [
+          {
+            "name": "“Slithering serpent.”",
+            "video_path": "a_catepillar/worm/slithering_serpent/video_meta_3.mp4",
+            "children": []
+          },
+          {
+            "name": "“Slithering snake.”",
+            "video_path": "a_catepillar/worm/slithering_snake/video_meta_3.mp4",
+            "children": []
+          }
+        ]
+      }
+    ]
+  }
+  

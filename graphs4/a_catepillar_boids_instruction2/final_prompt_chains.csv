@@ -1,8 +1,8 @@
 branch_index,prompt_chain
-0,"a catepillar ; “Spiky caterpillar” ; “Spiky caterpillar, fractal bloom” ; “Spiky fractal bloom, bioluminescent”"
-1,"a catepillar ; “Spiky caterpillar” ; “Spiky moth” ; “Spiky, iridescent wings”"
-2,a catepillar ; “Spiky caterpillar” ; “Spiky moth” ; “Spiky metamorphosis”
-3,a catepillar ; “Worm.” ; “Slithering serpent.” ; “Shadowed scales.”
-4,a catepillar ; “Worm.” ; “Slithering serpent.” ; “Slithering shadow.”
-5,a catepillar ; “Worm.” ; “Slithering snake.” ; “Deep-sea jellyfish.”
-6,a catepillar ; “Worm.” ; “Slithering snake.” ; “Slithering eels.”
+0,"a catepillar ; “Spiky caterpillar” ; “Spiky caterpillar, fractal bloom” 
+1,"a catepillar ; “Spiky caterpillar” ; “Spiky moth” 
+
+3,a catepillar ; “Worm.” ; “Slithering serpent.” 
+
+5,a catepillar ; “Worm.” ; “Slithering snake.” 
+
