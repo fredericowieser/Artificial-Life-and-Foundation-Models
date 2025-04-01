@@ -47,7 +47,7 @@ group.add_argument("--coef_prompt", type=float, default=1., help="coefficient fo
 group.add_argument("--coef_softmax", type=float, default=0.,
                    help="coefficient for softmax loss (used for multiple temporal prompts)")
 group.add_argument("--coef_oe", type=float, default=0., help="coefficient for open-endedness loss")
-group.add_argument("--instruction_prompt", type=str, default="diverse_original", help="specify which instruction prompt in the instruction_prompts dictionary to use (see prompts.py)")
+group.add_argument("--instruction_prompt", type=str, default="diverse_original", help="specify which instruction prompt in the instruction_prompts dictionary to use (see instruction_prompts.py)")
 
 
 group = parser.add_argument_group("optimization")
