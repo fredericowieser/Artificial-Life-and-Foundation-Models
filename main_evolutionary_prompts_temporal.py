@@ -221,8 +221,8 @@ def run_for_iteration(
         rollout_data = rollout_fn_video(rng, params)
         img = np.array(rollout_data['rgb'])
         img = rearrange(img, "T H W D -> T D H W")
-        if not rgb:
-            img = (img*255).clip(0,255)
+        # if not rgb:
+        img = (img*255).clip(0,255)
         img = img.astype(np.uint8)
         name=f"iteration_{iteration_idx}"
         wandb.log({name: wandb.Video(img, fps=30, caption=caption)})
