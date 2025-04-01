@@ -351,6 +351,9 @@ def main(args):
                 for arg, value in vars(args).items():
                     f.write(f"{arg}: {value}\n")
 
+        # Reset the prompts for the next temperature
+        all_prompts = [splitted[0]]
+
 
 if __name__ == '__main__':
     main(parse_args())
