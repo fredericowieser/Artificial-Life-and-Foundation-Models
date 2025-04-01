@@ -11,7 +11,7 @@ parameters:
     value: "./data/softmax_sweep"
   substrate:
     value: "lenia"
-  time-sampling:
+  time_sampling:
     value: 1
   prompts:
     value: "a caterpillar"
