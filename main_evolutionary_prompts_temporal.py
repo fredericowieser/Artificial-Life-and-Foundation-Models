@@ -13,13 +13,13 @@ import numpy as np
 import evosax
 from tqdm.auto import tqdm
 import imageio
+from einops import rearrange
 
 import asal.substrates as substrates
 import asal.foundation_models as foundation_models
 from asal.rollout import rollout_simulation
 import asal.asal_metrics as asal_metrics
 import asal.util as util
-# from asal.wandb_util import WandbLogger
 
 # Gemma 3
 from asal_pytorch.foundation_models.gemma3 import Gemma3Chat
@@ -75,8 +75,7 @@ def run_for_iteration(
     rng,
     iteration_idx,
     prompt_list,          # all prompts for iteration i
-    init_params=None,
-    wandb_logger=None
+    init_params=None
 ):
     """
    We do time_sampling = len(prompt_list).
@@ -91,10 +90,6 @@ def run_for_iteration(
     substrate = substrates.FlattenSubstrateParameters(substrate)
     if args.rollout_steps is None:
         args.rollout_steps = substrate.rollout_steps
-
-    # Initialise wandb logging
-    if args.wandb and iteration_idx==0:
-        wandb_logger.initialise_rollout(substrate=substrate)
 
     # 2) We'll have as many prompts as we have time chunks
     n_prompts = len(prompt_list)
@@ -192,14 +187,9 @@ def run_for_iteration(
 
         # Wandb logging
         if args.wandb:
-            wandb_logger.log_losses(di)
-
-    if args.wandb:
-        params, _ = util.load_pkl(args.save_dir, "best")
-        rng = jax.random.PRNGKey(args.seed)
-        caption = args.prompts if type(args.prompts) == str else ";".join(args.prompts)
-        wandb_logger.log_video(rng=rng, params=params, name=f"iteration_{iteration_idx}", caption=caption)
-        print(f"Iteration {iteration_idx} video logged to wandb")
+            wandb.log({"best_loss": di["best_loss"]})
+            best_losses = jax.tree_util.tree_map(lambda x: jnp.min(x), di['loss_dict'])
+            wandb.log({k: v for k, v in best_losses.items()})
 
     # after done with n_iters, load the best params from disk
     if args.save_dir:
@@ -222,6 +212,22 @@ def run_for_iteration(
     rgb = np.array(rollout_data['rgb'])
     video_frames = (rgb * 255).clip(0, 255).astype(np.uint8)
 
+    # Log video to wandb
+    if args.wandb:
+        params, _ = util.load_pkl(args.save_dir, "best")
+        rng = jax.random.PRNGKey(args.seed) # TODO should this be same rng?
+        caption = prompt_list[-1] #";".join(prompt_list) if len(prompt_list) > 1 else args.prompts
+
+        rollout_data = rollout_fn_video(rng, params)
+        img = np.array(rollout_data['rgb'])
+        img = rearrange(img, "T H W D -> T D H W")
+        # if not rgb:
+        img = (img*255).clip(0,255)
+        img = img.astype(np.uint8)
+        name=f"iteration_{iteration_idx}"
+        wandb.log({name: wandb.Video(img, fps=30, caption=caption)})
+        print(f"Iteration {iteration_idx} video logged to wandb")
+
     return best_params, video_frames, rng, data_log
 
 
@@ -237,8 +243,15 @@ def save_final_prompts_csv(all_prompts, folder):
 
 
 # Show final video to Gemma => get new prompt
-# EVOLVE_INSTRUCTION ="""You just saw the video for iteration {i}, which used prompts so far: {all_prompts}. "
-#    "Suggest a NEW single prompt (no extra text) to expand upon this evolution next time."""
+EVOLVE_INSTRUCTION ="""This artificial life simulation was optimised to produce a simulation which sequentially follows the list PREVIOUS TARGET PROMPTS:
+'{all_prompts}'.
+The aim is to facilitate open-ended evolution of artificial life to discover new, interesting life forms - especially ones humans have never seen before.
+
+You are in iteration {i} of the evolution, and your task is to provide the NEXT TARGET PROMPT for the next stage of the artificial life evolution, to follow on from the previous prompts and simulation. Your aim is to create a diverse, interesting and new life form - feel free to explore prompt space in unexpected and surprising ways. Be creative and be prepared to take risks! Your NEXT TARGET PROMPT should be macroscopically lifelike and meaningfully from the previous prompts in order to evolve open-ended life forms. Use your imagination, but keep your target prompt simple and concise in a FEW WORDS only. The algorithm will then append NEW TARGET PROMPT to the list of PREVIOUS TARGET PROMPTS and optimise the simulation parameters to create a simulation which matches this sequence of prompts.
+
+ONLY output the new target prompt and nothing else. Keep it clear and concise. Have fun!
+
+NEXT TARGET PROMPT: """
 
 def main(args):
     """
@@ -248,9 +261,13 @@ def main(args):
     3) We produce a final video for iteration i, then feed it to Gemma for the next prompt.
     4) Over N iterations, we have i=1..N => 1 + 2 + ... + N total prompts appended across iterations.
     """
-
     # Add evolve instruction to args for logging
-    # args.evolve_instruction = EVOLVE_INSTRUCTION.format(current_prompt="current_prompt")
+    args.evolve_instruction = EVOLVE_INSTRUCTION
+
+    # Setup wandb logging
+    if args.wandb:
+        run = wandb.init(project="alife-project", group="evolutionary-prompting", entity="ucl-asal", config=vars(args))
+        # table = wandb.Table(columns=["prompts"], data=[[args.prompts]])
 
     gemma = Gemma3Chat()
 
@@ -283,8 +300,7 @@ def main(args):
             rng=rng,
             iteration_idx=i,
             prompt_list=prompts_for_i,
-            init_params=current_params,
-            # wandb_logger=wandb_logger
+            init_params=current_params
         )
 
         # Save final iteration video
@@ -324,10 +340,11 @@ def main(args):
                 writer.writerow(row)
 
         # # Show final video to Gemma => get new prompt
-        instruction =(f"You just saw the video for iteration {i}, which used prompts so far: {all_prompts}. "
-            "Suggest a NEW single prompt (no extra text) to expand upon this evolution next time."
-        )
-        instruction = instruction.format(i=i, all_prompts=all_prompts)
+        # instruction =(f"You just saw the video for iteration {i}, which used prompts so far: {all_prompts}. "
+        #     "Suggest a NEW single prompt (no extra text) to expand upon this evolution next time."
+        # )
+        # instruction = instruction.format(i=i, all_prompts=all_prompts)
+        instruction = EVOLVE_INSTRUCTION.format(i=i, all_prompts=all_prompts)
         new_prompt = gemma.describe_video(
             video_frames,
             extract_prompt=instruction,
@@ -339,7 +356,8 @@ def main(args):
 
         # Log the prompt file and text to wandb
         # if args.wandb:
-        #     wandb_logger.log_prompt(new_prompt)  
+        #     table.add_data(new_prompt)
+        #     wandb.log({"prompts": table})
 
         # Append new prompt to our list => next iteration will have i+1 total prompts
         all_prompts.append(new_prompt)
