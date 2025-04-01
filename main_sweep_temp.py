@@ -60,9 +60,12 @@ def parse_args(*args, **kwargs):
             setattr(args, k, None)
     return args
 
-def load_best_params(save_dir):
+def load_best_params(save_dir, iteration_idx=None):
     """Load best member from best.pkl."""
-    best_path = os.path.join(save_dir, "best.pkl")
+    if iteration_idx is not None:
+        best_path = os.path.join(save_dir, f"best_{iteration_idx}.pkl")
+    else:
+        best_path = os.path.join(save_dir, "best.pkl")
     with open(best_path, "rb") as f:
         data = pickle.load(f)
     # data[0] => best_member, data[1] => best_fitness
@@ -191,7 +194,7 @@ def run_for_iteration(
 
     # after done with n_iters, load the best params from disk
     if save_dir:
-        best_params = load_best_params(save_dir)
+        best_params = load_best_params(save_dir, iteration_idx)
     else:
         best_params = es_state.best_member
 
