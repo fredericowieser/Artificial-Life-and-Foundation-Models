@@ -1,0 +1,39 @@
+program: main_evolutionary_prompts_temporal.py
+project: alife-project
+entity: ucl-asal
+group: evolutionary-prompting
+name: sweep-softmax
+method: grid
+parameters:
+  coef_softmax:
+    values: [0.0, 0.01, 0.1, 0.3, 0.5, 0.7, 1.0, 2.0]
+  save_dir:
+    value: "./data/softmax_sweep"
+  substrate:
+    value: "lenia"
+  time_sampling:
+    value: 1
+  prompts:
+    value: "a caterpillar"
+  coef_prompt:
+    value: 1.
+  coef_oe:
+    value: 0.
+  bs:
+    value: 1
+  pop_size:
+    value: 16
+  n_iters:
+    value: 2000
+  sigma:
+    value: 0.1
+  N:
+    value: 5
+  temp:
+    value: 1.0
+  max_images:
+    value: 10
+  wandb:
+    value: true
+  
+  
