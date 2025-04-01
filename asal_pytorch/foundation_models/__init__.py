@@ -25,8 +25,6 @@ def create_foundation_model(fm_name, device):
         fm= Gemma3Chat(device)
     # elif fm_name=='video_clip':
     #     fm= VideoCLIP(device)
-    # elif fm_name=='dino':
-    #    raise NotImplementedError("DINO foundation model is not implemented yet")
     else:
         raise ValueError(f"Unknown foundation model name: {fm_name}")
     return fm

@@ -12,25 +12,15 @@ class CLIP:
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
         self.device = torch.device(device)
-        
-        # Enable faster GPU matrix multiplications
         if self.device.type == "cuda":
             torch.backends.cuda.matmul.allow_tf32 = True
-
-        # Load model and processor
         self.device = device
         self.processor = AutoProcessor.from_pretrained(f"openai/{clip_model}")
         self.clip_model = CLIPModel.from_pretrained(f"openai/{clip_model}").to(self.device).eval()
-
-        # Compile model for speedup if using PyTorch 2.0+
         if torch.__version__ >= "2.0":
             self.clip_model = torch.compile(self.clip_model)
-
-        # Convert normalization constants to tensors
         self.img_mean = torch.tensor(self.processor.image_processor.image_mean, device=self.device).view(3, 1, 1)
         self.img_std = torch.tensor(self.processor.image_processor.image_std, device=self.device).view(3, 1, 1)
-
-        # Transformations
         self.transform = transforms.Compose([
             transforms.Resize((224, 224), antialias=True),  # Faster and better rescaling
             transforms.ToTensor(),

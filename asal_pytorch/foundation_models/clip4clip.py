@@ -1,23 +1,15 @@
 import torch
-
-import jax.numpy as jnp
 import numpy as np
-
 import torchvision.transforms as T
-
 from transformers import (
-    AutoProcessor,
-    FlaxCLIPModel,
     CLIPTextModelWithProjection,
     CLIPTokenizer,
     CLIPVisionModelWithProjection,
 )
 from torchvision.transforms.functional import InterpolationMode
 
-
 from PIL import Image
-
-from typing import Any, Union, List
+from typing import Union, List
 
 class CLIP4CLIP:
     def __init__(
@@ -31,35 +23,24 @@ class CLIP4CLIP:
         """
         if self.device.type == "cuda":
             torch.backends.cuda.matmul.allow_tf32 = True
-
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "cpu"
-
         self.device = device
-
-        # Text sub-model
-
         self.text_model = CLIPTextModelWithProjection.from_pretrained(
             model_name,
             torch_dtype=torch_dtype
         )
-
         self.tokenizer = CLIPTokenizer.from_pretrained(model_name)
         if torch.__version__ >= "2.0":
             self.text_model = torch.compile(self.text_model)
         self.text_model.to(self.device)
-
-        # Vision sub-model
         self.vision_model = CLIPVisionModelWithProjection.from_pretrained(
             model_name,
             torch_dtype=torch_dtype
         )
-        # Compile model for speedup if using PyTorch 2.0+
         if torch.__version__ >= "2.0":
             self.vision_model = torch.compile(self.vision_model)
         self.vision_model.to(self.device)
-
-
         # TorchVision transforms for images/frames, as recommended in model card
         self.image_transform = T.Compose([
             T.Resize(224, interpolation=InterpolationMode.BICUBIC),
@@ -76,7 +57,6 @@ class CLIP4CLIP:
     def embed_txt(self, text: Union[str, List[str]]) -> torch.Tensor:
         if isinstance(text, str):
             text = [text]
-
         # Tokenize
         inputs = self.tokenizer(text, return_tensors="pt", padding=True, truncation=True)
         inputs = {k: v.to(self.device) for k, v in inputs.items()}
@@ -86,9 +66,6 @@ class CLIP4CLIP:
         text_emb = outputs["text_embeds"]  # or outputs[0]
 
         # L2-normalize (in torch, then convert to JAX)
-        # text_emb = text_emb / text_emb.norm(dim=-1, keepdim=True)
-        # text_emb_np = text_emb.cpu().numpy()
-        # return jnp.array(text_emb_np)
         text_emb = text_emb / text_emb.norm(dim=-1, keepdim=True)
         return text_emb
 
@@ -105,17 +82,12 @@ class CLIP4CLIP:
         img_emb = outputs["image_embeds"]  # shape: (1, hidden_dim)
 
         # L2-normalize
-        # img_emb = img_emb / img_emb.norm(dim=-1, keepdim=True)
-        # img_emb_np = img_emb.cpu().numpy()
-        # return jnp.array(img_emb_np)
         img_emb = img_emb / img_emb.norm(dim=-1, keepdim=True)
         return img_emb
 
-
     @torch.no_grad()
     def embed_video(self, video_frames: List[np.ndarray], max_frames: int = 20) -> torch.Tensor:
-        # 1) Convert frames to PIL
-        # pil_frames = [Image.fromarray(frm).convert("RGB") for frm in video_frames]
+        # Convert frames to PIL
         pil_frames = []
         for frm in video_frames:
             if isinstance(frm, Image.Image):
@@ -123,12 +95,12 @@ class CLIP4CLIP:
             else:
                 pil_frames.append(Image.fromarray(frm).convert("RGB"))
 
-        # 2) Subsample frames if necessary
+        # Subsample frames if necessary
         if len(pil_frames) > max_frames:
             step = max(1, len(pil_frames) // max_frames)
             pil_frames = pil_frames[0::step][:max_frames]
 
-        # 3) Transform & embed each frame
+        # Transform and embed each frame
         all_embs = []
         for frame in pil_frames:
             frame_tensor = self.image_transform(frame).unsqueeze(0).to(self.device)
@@ -138,17 +110,10 @@ class CLIP4CLIP:
             frame_emb = frame_emb / frame_emb.norm(dim=-1, keepdim=True)
             all_embs.append(frame_emb)
 
-        if len(all_embs) == 0:
-            # Edge case: if no frames, return zeros
-            return jnp.zeros((1, self.vision_model.config.projection_dim))
-
-        # 4) Stack + average => shape: (num_frames, hidden_dim) -> (1, hidden_dim)
+        # Stack + average => shape: (num_frames, hidden_dim) -> (1, hidden_dim)
         embs_stack = torch.cat(all_embs, dim=0)
         vid_emb = embs_stack.mean(dim=0, keepdim=True)  # shape: (1, hidden_dim)
 
-        # 5) Final L2-normalize
-        # vid_emb = vid_emb / vid_emb.norm(dim=-1, keepdim=True)
-        # vid_emb_np = vid_emb.cpu().numpy()
-        # return jnp.array(vid_emb_np)
+        # Final L2-normalize
         vid_emb = vid_emb / vid_emb.norm(dim=-1, keepdim=True)
         return vid_emb

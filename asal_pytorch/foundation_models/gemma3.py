@@ -138,3 +138,58 @@ class Gemma3Chat:
         return clean_gemma_output(
             self.processor.decode(output_ids[0], skip_special_tokens=True)
         )
+
+    def compare_videos(
+        self,
+        video_frames_1,
+        video_frames_2,
+        max_images=10,
+        extract_prompt="Describe the video.",
+        max_tokens=65,
+        temperature=0.5,
+    ):
+        """
+        Generates a comparison between two lists of raw video frames (NumPy arrays).
+        Frames are sampled up to `max_images` and processed by the Gemma 3 model.
+        """
+        video_frames = [video_frames_1, video_frames_2]
+        if isinstance(video_frames, torch.Tensor):
+            to_pil = ToPILImage()
+            frames = []
+            for frame in video_frames:
+                frames.append(to_pil(frame))
+        else:
+            frames = [Image.fromarray(f).convert("RGB") for f in video_frames]
+
+        if len(frames) > max_images:
+            step = max(1, len(frames) // max_images)
+            frames = frames[0::step][:max_images]
+
+        messages = [
+            {"role": "system", "content": [{"type": "text", "text": extract_prompt}]},
+            {
+                "role": "user",
+                "content": [{"type": "image", "image": img} for img in frames],
+            },
+        ]
+        inputs = self.processor.apply_chat_template(
+            messages,
+            add_generation_prompt=True,
+            tokenize=True,
+            return_tensors="pt",
+            return_dict=True,
+        ).to(device=self.device)
+
+        with torch.backends.cuda.sdp_kernel(enable_flash=False, enable_mem_efficient=False, enable_math=True):
+            with torch.no_grad():
+                output_ids = self.model.generate(
+                    **inputs, 
+                    max_new_tokens=max_tokens,
+                    temperature=temperature,
+                    do_sample=True,
+                    top_p=None,
+                    top_k=None,
+                )
+        return clean_gemma_output(
+            self.processor.decode(output_ids[0], skip_special_tokens=True)
+        )

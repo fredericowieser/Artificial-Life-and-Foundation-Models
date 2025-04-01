@@ -15,34 +15,22 @@ class BLIP2:
         """
         Initialize the BLIP-2 model and processor for embedding text, images, and videos.
         """
-
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
         self.device = torch.device(device)
-        
-        # Enable faster GPU matrix multiplications
         if self.device.type == "cuda":
             torch.backends.cuda.matmul.allow_tf32 = True
-
         self.device = device
         self.processor = Blip2Processor.from_pretrained(model_name)
         self.model = Blip2Model.from_pretrained(model_name, torch_dtype=torch_dtype)
-
-
         if torch.__version__ >= "2.0":
             self.model = torch.compile(self.model)
-
         self.model.to(device)
-
-
 
     @torch.no_grad()
     def embed_txt(self, text: Union[str, List[str]]) -> torch.Tensor:
         """
         Get a normalized text embedding from BLIP-2.
-
-        - We request hidden states from the language model
-          and perform a simple mean-pooling over the sequence dimension.
         """
         if isinstance(text, str):
             text = [text]
@@ -65,11 +53,6 @@ class BLIP2:
 
         # Simple mean-pool across the sequence dimension
         text_emb = last_hidden_state.mean(dim=1)  # shape: (batch_size, hidden_dim)
-
-        # Convert to NumPy, then L2-normalize with JAX
-        # text_emb_np = text_emb.detach().cpu().numpy()
-        # text_emb_normed = text_emb_np / np.linalg.norm(text_emb_np, axis=-1, keepdims=True)
-
         text_emb_normed = text_emb / text_emb.norm(dim=-1, keepdim=True)
         return text_emb_normed
 
@@ -86,11 +69,6 @@ class BLIP2:
 
         # We can use 'pooler_output' to get a single [batch_size, hidden_dim] embedding
         img_emb = vision_outputs.pooler_output  # shape: (batch_size, hidden_dim)
-
-        # img_emb_np = img_emb.detach().cpu().numpy()
-        # img_emb_normed = img_emb_np / np.linalg.norm(img_emb_np, axis=-1, keepdims=True)
-
-        # return jnp.array(img_emb_normed)
         img_emb_normed = img_emb / img_emb.norm(dim=-1, keepdim=True)
         return img_emb_normed
 
@@ -127,13 +105,7 @@ class BLIP2:
         frame_embs = vision_outputs.pooler_output
 
         # Average across frames -> single vector per video
-        vid_emb = frame_embs.mean(dim=0, keepdims=True)
-
-        # Convert to NumPy, L2-normalize with JAX
-        # vid_emb_np = vid_emb.detach().cpu().numpy()
-        # vid_emb_normed = vid_emb_np / np.linalg.norm(vid_emb_np, axis=-1, keepdims=True)
-
-        # return jnp.array(vid_emb_normed)
+        vid_emb = frame_embs.mean(dim=0, keepdims=True) # return jnp.array(vid_emb_normed)
         vid_emb_normed = vid_emb / vid_emb.norm(dim=-1, keepdim=True)
         return vid_emb_normed
 

@@ -1,22 +1,10 @@
-
 import torch
-
-import jax.numpy as jnp
 import numpy as np
-import matplotlib.pyplot as plt
-
-from tqdm.auto import tqdm
 from PIL import Image
 
-from typing import Any, Union, List
-from functools import partial
-from dataclasses import dataclass
-from collections import namedtuple
-
+from typing import Union, List
 
 from transformers import (
-    AutoProcessor,
-    FlaxCLIPModel,
     VideoCLIPModel,
     VideoCLIPProcessor,
 )
@@ -31,25 +19,16 @@ class VideoCLIP:
         """
         Initialize the VideoCLIP model and processor for embedding text, images, and videos.
         """
-
-
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
         self.device = torch.device(device)
-        
-        # Enable faster GPU matrix multiplications
         if self.device.type == "cuda":
             torch.backends.cuda.matmul.allow_tf32 = True
-
         self.device = device
-
-        # Load model + processor
         self.processor = VideoCLIPProcessor.from_pretrained(model_name)
         self.model = VideoCLIPModel.from_pretrained(model_name, torch_dtype=torch_dtype)
-
         if torch.__version__ >= "2.0":
             self.model = torch.compile(self.model)
-
         self.model.to(self.device)
 
     @torch.no_grad()
@@ -59,7 +38,6 @@ class VideoCLIP:
         """
         if isinstance(text, str):
             text = [text]
-
         # Prepare text inputs for VideoCLIP
         inputs = self.processor(
             text=text,
@@ -76,13 +54,8 @@ class VideoCLIP:
         # Extract text embedding: (batch_size, hidden_dim)
         text_emb = outputs.text_embeds  # e.g., shape: [B, D]
 
-        # Convert to NumPy, then L2-normalize
-        # text_emb_np = text_emb.cpu().numpy()
-        # text_emb_normed = text_emb_np / np.linalg.norm(text_emb_np, axis=-1, keepdims=True)
-
         # return jnp.array(text_emb_normed)
         text_emb_normed = text_emb / text_emb.norm(dim=-1, keepdim=True)
-
         return text_emb_normed
 
     @torch.no_grad()
@@ -107,15 +80,7 @@ class VideoCLIP:
 
         # Extract video embedding: (batch_size, hidden_dim)
         vid_emb = outputs.video_embeds  # shape: [1, D]
-
-        # Convert to NumPy, L2-normalize
-        # vid_emb_np = vid_emb.cpu().numpy()
-        # vid_emb_normed = vid_emb_np / np.linalg.norm(vid_emb_np, axis=-1, keepdims=True)
-
-        # return jnp.array(vid_emb_normed)
-
         vid_emb_normed = vid_emb / vid_emb.norm(dim=-1, keepdim=True)
-
         return vid_emb_normed
 
     @torch.no_grad()
@@ -154,13 +119,6 @@ class VideoCLIP:
 
         # Extract video embedding (batch_size, hidden_dim); typically shape [1, D]
         vid_emb = outputs.video_embeds
-
-        # # Convert to NumPy, L2-normalize
-        # vid_emb_np = vid_emb.cpu().numpy()
-        # vid_emb_normed = vid_emb_np / np.linalg.norm(vid_emb_np, axis=-1, keepdims=True)
-
-        # return jnp.array(vid_emb_normed)
         vid_emb_normed = vid_emb / vid_emb.norm(dim=-1, keepdim=True)
-
         return vid_emb_normed
 
