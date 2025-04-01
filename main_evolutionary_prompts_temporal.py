@@ -216,7 +216,7 @@ def run_for_iteration(
     if args.wandb:
         params, _ = util.load_pkl(args.save_dir, "best")
         rng = jax.random.PRNGKey(args.seed) # TODO should this be same rng?
-        caption = ";".join(prompt_list) if len(prompt_list) > 1 else args.prompts
+        caption = prompt_list[-1] #";".join(prompt_list) if len(prompt_list) > 1 else args.prompts
 
         rollout_data = rollout_fn_video(rng, params)
         img = np.array(rollout_data['rgb'])
@@ -357,6 +357,7 @@ def main(args):
         # Log the prompt file and text to wandb
         if args.wandb:
             table.add_data(new_prompt)
+            wandb.log({"prompts": table})
 
         # Append new prompt to our list => next iteration will have i+1 total prompts
         all_prompts.append(new_prompt)
