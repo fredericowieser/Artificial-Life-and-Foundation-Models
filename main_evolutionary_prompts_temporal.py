@@ -268,7 +268,7 @@ def main(args):
     # Setup wandb logging
     if args.wandb:
         run = wandb.init(project="alife-project", group="evolutionary-prompting", entity="ucl-asal", config=vars(args))
-        # table = wandb.Table(columns=["prompts"], data=[[args.prompts]])
+        table = wandb.Table(columns=["prompts"], data=[[args.prompts]])
 
     gemma = Gemma3Chat()
 
@@ -356,9 +356,8 @@ def main(args):
         print(f"[Iteration {i}] Gemma suggested => '{new_prompt}'")
 
         # Log the prompt file and text to wandb
-        # if args.wandb:
-        #     table.add_data(new_prompt)
-        #     wandb.log({"prompts": table})
+        if args.wandb:
+            table.add_data(new_prompt)
 
         # Append new prompt to our list => next iteration will have i+1 total prompts
         all_prompts.append(new_prompt)
@@ -374,6 +373,8 @@ def main(args):
             f.write("Arguments:\n")
             for arg, value in vars(args).items():
                 f.write(f"{arg}: {value}\n")
+
+    wandb.log({"prompts": table})
 
 
 if __name__ == '__main__':
