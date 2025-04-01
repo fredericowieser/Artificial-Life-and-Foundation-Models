@@ -184,10 +184,10 @@ def run_for_iteration(
         # occasionally save
         if save_dir is not None and (i == args.n_iters - 1 or i % max(1, args.n_iters // 10) == 0):
             data_save = jax.tree_map(lambda *x: np.array(jnp.stack(x, axis=0)), *data_log)
-            util.save_pkl(save_dir, "data", data_save)
+            util.save_pkl(save_dir, f"data_{iteration_idx}", data_save)
 
             best_blob = jax.tree_map(lambda x: np.array(x), (es_state.best_member, es_state.best_fitness))
-            util.save_pkl(save_dir, "best", best_blob)
+            util.save_pkl(save_dir, f"best_{iteration_idx}", best_blob)
 
     # after done with n_iters, load the best params from disk
     if save_dir:
