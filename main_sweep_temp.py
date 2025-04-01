@@ -248,7 +248,7 @@ def main(args):
     # Start with just the first prompt
     all_prompts = [splitted[0]]
 
-    TEMP_SWEEP = [0.0, 0.01, 0.1, 0.3, 0.5, 0.7, 1.0, 2.0]
+    TEMP_SWEEP = [0.01, 0.1, 0.3, 0.5, 0.7, 1.0, 2.0]
 
     for temp in TEMP_SWEEP:
         rng = None
