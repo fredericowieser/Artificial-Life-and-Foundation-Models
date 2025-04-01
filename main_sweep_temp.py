@@ -60,9 +60,12 @@ def parse_args(*args, **kwargs):
             setattr(args, k, None)
     return args
 
-def load_best_params(save_dir):
+def load_best_params(save_dir, iteration_idx=None):
     """Load best member from best.pkl."""
-    best_path = os.path.join(save_dir, "best.pkl")
+    if iteration_idx is not None:
+        best_path = os.path.join(save_dir, f"best_{iteration_idx}.pkl")
+    else:
+        best_path = os.path.join(save_dir, "best.pkl")
     with open(best_path, "rb") as f:
         data = pickle.load(f)
     # data[0] => best_member, data[1] => best_fitness
@@ -184,14 +187,14 @@ def run_for_iteration(
         # occasionally save
         if save_dir is not None and (i == args.n_iters - 1 or i % max(1, args.n_iters // 10) == 0):
             data_save = jax.tree_map(lambda *x: np.array(jnp.stack(x, axis=0)), *data_log)
-            util.save_pkl(save_dir, "data", data_save)
+            util.save_pkl(save_dir, f"data_{iteration_idx}", data_save)
 
             best_blob = jax.tree_map(lambda x: np.array(x), (es_state.best_member, es_state.best_fitness))
-            util.save_pkl(save_dir, "best", best_blob)
+            util.save_pkl(save_dir, f"best_{iteration_idx}", best_blob)
 
     # after done with n_iters, load the best params from disk
     if save_dir:
-        best_params = load_best_params(save_dir)
+        best_params = load_best_params(save_dir, iteration_idx)
     else:
         best_params = es_state.best_member
 
@@ -248,7 +251,7 @@ def main(args):
     # Start with just the first prompt
     all_prompts = [splitted[0]]
 
-    TEMP_SWEEP = [0.0, 0.01, 0.1, 0.3, 0.5, 0.7, 1.0, 2.0]
+    TEMP_SWEEP = [0.01, 0.1, 0.3, 0.5, 0.7, 1.0, 2.0, 5.0]
 
     for temp in TEMP_SWEEP:
         rng = None
@@ -350,6 +353,9 @@ def main(args):
                 f.write("Arguments:\n")
                 for arg, value in vars(args).items():
                     f.write(f"{arg}: {value}\n")
+
+        # Reset the prompts for the next temperature
+        all_prompts = [splitted[0]]
 
 
 if __name__ == '__main__':
