@@ -1,0 +1,18 @@
+Arguments:
+seed: 0
+save_dir: ./data/temp_sweep_lenia_caterpillar
+wandb: False
+substrate: lenia
+rollout_steps: 256
+foundation_model: clip
+time_sampling: 1
+prompts: a caterpillar
+coef_prompt: 1.0
+coef_softmax: 1.0
+coef_oe: 0.0
+bs: 1
+pop_size: 16
+n_iters: 1000
+sigma: 0.1
+N: 5
+max_images: 10
