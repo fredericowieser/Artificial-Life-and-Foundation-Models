@@ -216,7 +216,7 @@ def run_for_iteration(
     if args.wandb:
         params, _ = util.load_pkl(args.save_dir, "best")
         rng = jax.random.PRNGKey(args.seed) # TODO should this be same rng?
-        caption = args.prompts if type(args.prompts) == str else ";".join(args.prompts)
+        caption = ";".join(prompt_list) if len(prompt_list) > 1 else args.prompts
 
         rollout_data = rollout_fn_video(rng, params)
         img = np.array(rollout_data['rgb'])
