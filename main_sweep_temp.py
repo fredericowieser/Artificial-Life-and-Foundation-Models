@@ -5,7 +5,6 @@ import argparse
 from functools import partial
 import pickle
 import csv
-import wandb
 import jax
 import jax.numpy as jnp
 from jax.random import split
