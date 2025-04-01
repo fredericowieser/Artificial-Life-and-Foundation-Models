@@ -24,7 +24,7 @@ parameters:
   pop_size:
     value: 16
   n_iters:
-    value: 500
+    value: 1000
   sigma:
     value: 0.1
   N:
