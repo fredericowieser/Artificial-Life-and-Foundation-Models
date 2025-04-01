@@ -24,6 +24,8 @@ import asal.util as util
 # Gemma 3
 from asal_pytorch.foundation_models.gemma3 import Gemma3Chat
 
+from instruction_prompts import prompts as instruction_prompts
+
 parser = argparse.ArgumentParser()
 group = parser.add_argument_group("meta")
 group.add_argument("--seed", type=int, default=0, help="the random seed")
@@ -45,6 +47,8 @@ group.add_argument("--coef_prompt", type=float, default=1., help="coefficient fo
 group.add_argument("--coef_softmax", type=float, default=0.,
                    help="coefficient for softmax loss (used for multiple temporal prompts)")
 group.add_argument("--coef_oe", type=float, default=0., help="coefficient for open-endedness loss")
+group.add_argument("--instruction_prompt", type=str, default="diverse_original", help="specify which instruction prompt in the instruction_prompts dictionary to use (see prompts.py)")
+
 
 group = parser.add_argument_group("optimization")
 group.add_argument("--bs", type=int, default=1, help="number of init states to average simulation over")
@@ -244,15 +248,15 @@ def save_final_prompts_csv(all_prompts, folder):
 
 
 # Show final video to Gemma => get new prompt
-EVOLVE_INSTRUCTION ="""This artificial life simulation was optimised to produce a simulation which sequentially follows the list PREVIOUS TARGET PROMPTS:
-'{all_prompts}'.
-The aim is to facilitate open-ended evolution of artificial life to discover new, interesting life forms - especially ones humans have never seen before.
+# EVOLVE_INSTRUCTION ="""This artificial life simulation was optimised to produce a simulation which sequentially follows the list PREVIOUS TARGET PROMPTS:
+# '{all_prompts}'.
+# The aim is to facilitate open-ended evolution of artificial life to discover new, interesting life forms - especially ones humans have never seen before.
 
-You are in iteration {i} of the evolution, and your task is to provide the NEXT TARGET PROMPT for the next stage of the artificial life evolution, to follow on from the previous prompts and simulation. Your aim is to create a diverse, interesting and new life form - feel free to explore prompt space in unexpected and surprising ways. Be creative and be prepared to take risks! Your NEXT TARGET PROMPT should be macroscopically lifelike and meaningfully from the previous prompts in order to evolve open-ended life forms. Use your imagination, but keep your target prompt simple and concise in a FEW WORDS only. The algorithm will then append NEW TARGET PROMPT to the list of PREVIOUS TARGET PROMPTS and optimise the simulation parameters to create a simulation which matches this sequence of prompts.
+# You are in iteration {i} of the evolution, and your task is to provide the NEXT TARGET PROMPT for the next stage of the artificial life evolution, to follow on from the previous prompts and simulation. Your aim is to create a diverse, interesting and new life form - feel free to explore prompt space in unexpected and surprising ways. Be creative and be prepared to take risks! Your NEXT TARGET PROMPT should be macroscopically lifelike and meaningfully from the previous prompts in order to evolve open-ended life forms. Use your imagination, but keep your target prompt simple and concise in a FEW WORDS only. The algorithm will then append NEW TARGET PROMPT to the list of PREVIOUS TARGET PROMPTS and optimise the simulation parameters to create a simulation which matches this sequence of prompts.
 
-ONLY output the new target prompt and nothing else. Keep it clear and concise. Have fun!
+# ONLY output the new target prompt and nothing else. Keep it clear and concise. Have fun!
 
-NEXT TARGET PROMPT: """
+# NEXT TARGET PROMPT: """
 
 def main(args):
     """
@@ -263,7 +267,8 @@ def main(args):
     4) Over N iterations, we have i=1..N => 1 + 2 + ... + N total prompts appended across iterations.
     """
     # Add evolve instruction to args for logging
-    args.evolve_instruction = EVOLVE_INSTRUCTION
+    # args.evolve_instruction = EVOLVE_INSTRUCTION
+    EVOLVE_INSTRUCTION = instruction_prompts[args.instruction_prompt] # key into instruction_prompts dictionary
 
     # Setup wandb logging
     if args.wandb:
