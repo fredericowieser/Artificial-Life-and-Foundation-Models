@@ -9,6 +9,7 @@ def strip_formatting(text: str) -> str:
     text = re.sub(r'`(.*?)`', r'\1', text, flags=re.DOTALL)
     text = re.sub(r'[^A-Za-z0-9\s]+', '', text)
     text = re.sub(r'\s+', ' ', text).strip()
+    text = text.replace("_", " ")
     return text
 
 if __name__ == "__main__":
