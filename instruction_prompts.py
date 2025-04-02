@@ -63,7 +63,7 @@ DIVERSE_OPEN_ENDED = """This artificial life simulation has been optimised to fo
 '{all_prompts}'.
 Consider these as constraints: ecological niches that have already been explored.
 
-You are in iteration {i}.  Your task is to propose the NEXT TARGET PROMPT to determine the next stage of evolution.  This is an opportunity to propose a direction that is significantly different from the past, but leads to interesting lifelike behaviour.  Can we recreate open-ended evolution of life?  Be bold and creative!  ONLY output the new target prompt.
+You are in iteration {i}.  Your task is to propose the NEXT TARGET PROMPT to determine the next stage of evolution.  This is an opportunity to propose a direction that is significantly different from the past, but leads to interesting lifelike behaviour.  Can we recreate open-ended evolution of life?  Be bold and creative!  ONLY output the new target prompt, and be concise. Avoid using too many adjectives.
 
 NEXT TARGET PROMPT: """
 
