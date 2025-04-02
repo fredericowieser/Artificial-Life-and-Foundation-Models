@@ -75,8 +75,6 @@ def run_optimisation(args, rng, iteration=0):
 
     print(f"\n=== Iteration {iteration} with prompts:", args.prompts, "===")
 
-
-
     prompts = args.prompts.split(";")
     if args.time_sampling < len(prompts): # doing multiple prompts
         args.time_sampling = len(prompts)
