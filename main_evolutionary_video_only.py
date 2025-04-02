@@ -111,7 +111,7 @@ def run_for_iteration(
     )
 
     # embed all prompts at once => shape (P, D), where P = n_prompts
-    z_txt = fm.embed_txt(prompt_list)
+    z_txt = fm.embed_txt(prompt_list[-1])
 
     # 3) CMA-ES setup
     if rng is None:
