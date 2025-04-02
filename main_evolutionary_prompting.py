@@ -11,7 +11,7 @@ import evosax
 from tqdm.auto import tqdm
 import imageio
 import wandb
-
+from clean_output import strip_formatting
 import asal.substrates as substrates
 import asal.foundation_models as foundation_models
 from asal.rollout import rollout_simulation
@@ -201,6 +201,7 @@ def main(args):
         evolve_instruction = EVOLVE_INSTRUCTION.format(current_prompt=current_prompt)
         
         evolved_prompt=gemma.describe_video(video_frames,extract_prompt=evolve_instruction, max_tokens=20)
+        evolved_prompt=strip_formatting(evolved_prompt)
 
         if args.save_dir is not None:
             # Log prompt file to save_dir

@@ -20,7 +20,7 @@ import asal.foundation_models as foundation_models
 from asal.rollout import rollout_simulation
 import asal.asal_metrics as asal_metrics
 import asal.util as util
-
+from clean_output import strip_formatting
 # Gemma 3
 from asal_pytorch.foundation_models.gemma3 import Gemma3Chat
 
@@ -358,6 +358,7 @@ def main(args):
             temperature=args.temp,
             max_images=args.max_images,
         )
+        new_prompt=strip_formatting(new_prompt)
         print(f"[Iteration {i}] Gemma suggested => '{new_prompt}'")
 
         # Log the prompt file and text to wandb
