@@ -74,5 +74,5 @@ prompts = {
     "diverse_few_shot": DIVERSE_FEW_SHOT,
     "short": SHORT,
     "short_behaviours": SHORT_BEHAVIOURS,
-    "diverse_final": DIVERSE_OPEN_ENDED
+    "diverse_open_ended": DIVERSE_OPEN_ENDED
 }
