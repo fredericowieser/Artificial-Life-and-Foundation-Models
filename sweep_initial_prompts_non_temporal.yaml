@@ -1,4 +1,4 @@
-program: main_evolutionary_prompts_temporal.py
+program: main_evolutionary_prompting.py
 project: alife-project
 entity: ucl-asal
 group: evolutionary-prompting
