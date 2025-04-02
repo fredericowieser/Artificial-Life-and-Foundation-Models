@@ -379,7 +379,8 @@ def main(args):
             for arg, value in vars(args).items():
                 f.write(f"{arg}: {value}\n")
 
-    wandb.log({"prompts": table})
+    if args.wandb:
+        wandb.log({"prompts": table})
 
 
 if __name__ == '__main__':
