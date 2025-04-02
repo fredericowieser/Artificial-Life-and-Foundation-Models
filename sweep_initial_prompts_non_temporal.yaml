@@ -1,4 +1,4 @@
-program: main_evolutionary_prompts_temporal.py
+program: main_evolutionary_prompting.py
 project: alife-project
 entity: ucl-asal
 group: evolutionary-prompting
@@ -6,7 +6,7 @@ name: sweep-initial-prompts-novelty-bonus
 method: grid
 parameters:
   coef_softmax:
-    value: 0.5
+    value: 0
   save_dir:
     value: "./data/instruction_prompt_sweep"
   substrate:
