@@ -6,7 +6,7 @@ name: sweep-initial-prompts-novelty-bonus
 method: grid
 parameters:
   coef_softmax:
-    value: 0.5
+    value: 0
   save_dir:
     value: "./data/instruction_prompt_sweep"
   substrate:
