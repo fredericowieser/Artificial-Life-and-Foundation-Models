@@ -20,7 +20,7 @@ import asal.foundation_models as foundation_models
 from asal.rollout import rollout_simulation
 import asal.asal_metrics as asal_metrics
 import asal.util as util
-from clean_output import strip_formatting
+
 # Gemma 3
 from asal_pytorch.foundation_models.gemma3 import Gemma3Chat
 
@@ -94,8 +94,10 @@ def run_for_iteration(
     fm = foundation_models.create_foundation_model(args.foundation_model)
     substrate = substrates.create_substrate(args.substrate)
     substrate = substrates.FlattenSubstrateParameters(substrate)
-    if args.rollout_steps is None:
-        args.rollout_steps = substrate.rollout_steps
+
+    rollout_steps_iter = substrate.rollout_steps * iteration_idx
+    substrate.rollout_steps = rollout_steps_iter
+    args.rollout_steps = rollout_steps_iter
 
     # 2) We'll have as many prompts as we have time chunks
     n_prompts = len(prompt_list)
@@ -111,6 +113,8 @@ def run_for_iteration(
         img_size=224,
         return_state=False
     )
+
+    print(f"=== Number of rollout steps in iteration {iteration_idx}:", args.rollout_steps, "===")
 
     # embed all prompts at once => shape (P, D), where P = n_prompts
     z_txt = fm.embed_txt(prompt_list)
@@ -359,7 +363,6 @@ def main(args):
             temperature=args.temp,
             max_images=args.max_images,
         )
-
         new_prompt = strip_formatting(new_prompt)
         print(f"[Iteration {i}] Gemma suggested => '{new_prompt}'")
 

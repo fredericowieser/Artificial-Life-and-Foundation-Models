@@ -11,13 +11,13 @@ import evosax
 from tqdm.auto import tqdm
 import imageio
 import wandb
+from einops import rearrange
 from clean_output import strip_formatting
 import asal.substrates as substrates
 import asal.foundation_models as foundation_models
 from asal.rollout import rollout_simulation
 import asal.asal_metrics as asal_metrics
 import asal.util as util
-from asal.wandb_util import WandbLogger
 
 from asal_pytorch.foundation_models.gemma3 import Gemma3Chat
 
@@ -25,7 +25,7 @@ parser = argparse.ArgumentParser()
 group = parser.add_argument_group("meta")
 group.add_argument("--seed", type=int, default=0, help="the random seed")
 group.add_argument("--save_dir", type=str, default=None, help="path to save results to")
-group.add_argument("--wandb", action="store_true", help="log to wandb; default false unless flag is given")
+group.add_argument("--wandb", nargs='?', const=True, default=False, type=lambda x: str(x).lower() == 'true')
 
 group = parser.add_argument_group("substrate")
 group.add_argument("--substrate", type=str, default='boids', help="name of the substrate")
@@ -36,7 +36,7 @@ group.add_argument("--foundation_model", type=str, default="clip", help="the fou
 group.add_argument("--time_sampling", type=int, default=1, help="number of images to render during one simulation rollout")
 group.add_argument("--prompts", type=str, default="a biological cell;two biological cells", help="prompts to optimize for seperated by ';'")
 group.add_argument("--coef_prompt", type=float, default=1., help="coefficient for ASAL prompt loss")
-group.add_argument("--coef_softmax", type=float, default=0., help="coefficient for softmax loss (only for multiple temporal prompts)")
+group.add_argument("--coef_softmax", type=float, default=0.5, help="coefficient for softmax loss (only for multiple temporal prompts)")
 group.add_argument("--coef_oe", type=float, default=0., help="coefficient for ASAL open-endedness loss (only for single prompt)")
 
 group = parser.add_argument_group("optimization")
@@ -45,6 +45,16 @@ group.add_argument("--pop_size", type=int, default=16, help="population size for
 group.add_argument("--n_iters", type=int, default=1000, help="number of iterations to run")
 group.add_argument("--sigma", type=float, default=0.1, help="mutation rate")
 group.add_argument("--N", type=int, default=3, help="num_of_loops")
+group.add_argument("--temp", type=float, default=0.1, help="Temperature for sampling")
+group.add_argument("--max_images", type=int, default=10, help="Number of image to give to Foundation Model")
+
+
+def parse_args(*args, **kwargs):
+    args = parser.parse_args(*args, **kwargs)
+    for k, v in vars(args).items():
+        if isinstance(v, str) and v.lower() == "none":
+            setattr(args, k, None)
+    return args
 
 def load_best_params(save_dir):
     """Load the best parameters from the saved pickle file."""
@@ -52,6 +62,7 @@ def load_best_params(save_dir):
     with open(best_params_path, "rb") as f:
         best_params = pickle.load(f)
     return best_params[0]  # Extract best parameters
+
 def parse_args(*args, **kwargs):
     args = parser.parse_args(*args, **kwargs)
     for k, v in vars(args).items():
@@ -59,7 +70,12 @@ def parse_args(*args, **kwargs):
             setattr(args, k, None)  # set all "none" to None
     return args
 
-def run_optimisation(args,rng, iteration=0, wandb_logger=None):
+def run_optimisation(args, rng, iteration=0):
+
+    print(f"\n=== Iteration {iteration} with prompts:", args.prompts, "===")
+
+
+
     prompts = args.prompts.split(";")
     if args.time_sampling < len(prompts): # doing multiple prompts
         args.time_sampling = len(prompts)
@@ -73,10 +89,6 @@ def run_optimisation(args,rng, iteration=0, wandb_logger=None):
     rollout_fn = partial(rollout_simulation, s0=None, substrate=substrate, fm=fm, rollout_steps=args.rollout_steps, time_sampling=(args.time_sampling, True), img_size=224, return_state=False)
 
     z_txt = fm.embed_txt(prompts) # P D
-
-    # Initialise wandb logging
-    if args.wandb and iteration==0:
-        wandb_logger.initialise_rollout(substrate=substrate)
 
     rng = jax.random.PRNGKey(args.seed)
     strategy = evosax.Sep_CMA_ES(popsize=args.pop_size, num_dims=substrate.n_params, sigma_init=args.sigma)
@@ -122,32 +134,31 @@ def run_optimisation(args,rng, iteration=0, wandb_logger=None):
             best = jax.tree.map(lambda x: np.array(x), (es_state.best_member, es_state.best_fitness))
             util.save_pkl(args.save_dir, "best", best)
 
+
         # Wandb logging
         if args.wandb:
-            wandb_logger.log_losses(di)
+            wandb.log({"best_loss": di["best_loss"]})
+            best_losses = jax.tree_util.tree_map(lambda x: jnp.min(x), di['loss_dict'])
+            wandb.log({k: v for k, v in best_losses.items()})
 
-    if args.wandb:
-        params, _ = util.load_pkl(args.save_dir, "best")
-        rng = jax.random.PRNGKey(args.seed)
-        wandb_logger.log_video(rng=rng, params=params, name=f"iteration_{iteration}", caption=args.prompts)
-        print(f"Iteration {iteration} video logged to wandb")
+    rollout_fn_video = partial(
+        rollout_simulation,
+        s0=None,
+        substrate=substrate,
+        fm=None,
+        rollout_steps=args.rollout_steps,
+        time_sampling='video',
+        img_size=224,
+        return_state=False,
+    )
+
 
     if args.save_dir is not None: 
         best_params = load_best_params(args.save_dir)
         # Using The Best Found Parameters
-        rollout_fn = partial(
-            rollout_simulation,
-            s0=None,
-            substrate=substrate,
-            fm=None,
-            rollout_steps=args.rollout_steps,
-            time_sampling='video',
-            img_size=224,
-            return_state=False,
-        )
 
         # Run simulation with best parameters
-        rollout_data = rollout_fn(rng, best_params)
+        rollout_data = rollout_fn_video(rng, best_params)
 
         # Convert frames from float [0,1] to uint8 [0,255] for video
         rgb_frames = np.array(rollout_data['rgb'])
@@ -157,15 +168,40 @@ def run_optimisation(args,rng, iteration=0, wandb_logger=None):
         imageio.mimsave(video_path, video_frames, fps=30, codec="libx264")
         print(f"Video saved at: {video_path}")
 
+    # Log video to wandb
+    if args.wandb:
+        params, _ = util.load_pkl(args.save_dir, "best")
+        rng = jax.random.PRNGKey(args.seed) # TODO should this be same rng?
+        caption = prompts
+
+        rollout_data = rollout_fn_video(rng, params)
+        img = np.array(rollout_data['rgb'])
+        img = rearrange(img, "T H W D -> T D H W")
+        # if not rgb:
+        img = (img*255).clip(0,255)
+        img = img.astype(np.uint8)
+        name=f"iteration_{iteration}"
+        wandb.log({name: wandb.Video(img, fps=30, caption=caption)})
+        print(f"Iteration {iteration} video logged to wandb")
+
+
         return video_path, video_frames, rng
     
-EVOLVE_INSTRUCTION = """This artificial life simulation was optimised to produce PREVIOUS TARGET PROMPT: '{current_prompt}'.
+# EVOLVE_INSTRUCTION = """This artificial life simulation was optimised to produce PREVIOUS TARGET PROMPT: '{current_prompt}'.
 
-        Your task is to provide a NEXT TARGET PROMPT for the next stage of the artificial life evolution, following on from the previous prompt and simulation. Your aim is to create a diverse, interesting and new life form. Your NEXT TARGET PROMPT should be macroscopically lifelike and VERY DIFFERENT from PREVIOUS TARGET PROMPT in order to evolve open-ended, surprising life forms. Use your imagination, but keep your target prompt simple and concise in a FEW WORDS only. The algorithm will then optimise NEW TARGET PROMPT.
+#         Your task is to provide a NEXT TARGET PROMPT for the next stage of the artificial life evolution, following on from the previous prompt and simulation. Your aim is to create a diverse, interesting and new life form. Your NEXT TARGET PROMPT should be macroscopically lifelike and VERY DIFFERENT from PREVIOUS TARGET PROMPT in order to evolve open-ended, surprising life forms. Use your imagination, but keep your target prompt simple and concise in a FEW WORDS only. The algorithm will then optimise NEW TARGET PROMPT.
         
-        ONLY output the new target prompt and nothing else.
+#         ONLY output the new target prompt and nothing else.
 
-        NEXT TARGET PROMPT: """
+#         NEXT TARGET PROMPT: """
+
+
+EVOLVE_INSTRUCTION = """This artificial life simulation has been optimised to produce PREVIOUS TARGET PROMPT: '{current_prompt}'.
+Consider this as a constraint: an ecological niche that have already been explored.
+
+Your task is to propose the NEXT TARGET PROMPT to determine the next stage of evolution.  This is an opportunity to propose a direction that is significantly different from the past, but leads to interesting lifelike behaviour.  Can we recreate open-ended evolution of life?  Be bold and creative!  ONLY output the new target prompt string, and be concise. Avoid using too many adjectives.
+
+NEXT TARGET PROMPT: """
 
 def main(args):
 
@@ -174,19 +210,16 @@ def main(args):
     if args.save_dir is not None:
         prompt_file = os.path.join(args.save_dir, "evolved_prompts.txt")
 
-    # Initialise wandb logging
+    # Setup wandb logging
     if args.wandb:
-        wandb_logger = WandbLogger(project="alife-project", group="evolutionary-prompting", entity="ucl-asal", config=vars(args))
-        wandb_logger.initialise_prompt_logging()
-        wandb_logger.log_prompt(args.prompts)
-    else:
-        wandb_logger = None
+        run = wandb.init(project="alife-project", group="non-temporal-prompting", entity="ucl-asal", config=vars(args))
+        table = wandb.Table(columns=["prompts"], data=[[args.prompts]])
 
     final_video_paths = []
     final_frames = []  # To collect frames from all iterations
 
     # Initial ASAL run (iteration 0)
-    video_path, video_frames, rng = run_optimisation(args, rng=None, iteration=0, wandb_logger=wandb_logger)
+    video_path, video_frames, rng = run_optimisation(args, rng=None, iteration=0)
     final_video_paths.append(video_path)
     final_frames.extend(video_frames)
     current_prompt = args.prompts  # starting prompt
@@ -200,23 +233,31 @@ def main(args):
         
         evolve_instruction = EVOLVE_INSTRUCTION.format(current_prompt=current_prompt)
         
-        evolved_prompt=gemma.describe_video(video_frames,extract_prompt=evolve_instruction, max_tokens=20)
+        evolved_prompt=gemma.describe_video(
+            video_frames,
+            extract_prompt=evolve_instruction,
+            max_tokens=20,
+            temperature=args.temp,
+            max_images=args.max_images,
+        )
+        print(f"[Iteration {i}] Gemma suggested => '{evolved_prompt}'")
         evolved_prompt=strip_formatting(evolved_prompt)
 
         if args.save_dir is not None:
             # Log prompt file to save_dir
             with open(prompt_file, "a") as f:
                 f.write(f"Iteration {i+1}: {evolved_prompt}\n")
-            
-        # Log the prompt file and text to wandb
-        if args.wandb:
-            wandb_logger.log_prompt(evolved_prompt)       
+
 
         print("Gemma suggested new prompt", evolved_prompt)
         current_prompt=evolved_prompt
         args.prompts = evolved_prompt
 
-        video_path, video_frames, rng = run_optimisation(args, rng, iteration=i+1, wandb_logger=wandb_logger)
+        # Log the prompt file and text to wandb
+        if args.wandb:
+            table.add_data(evolved_prompt)
+
+        video_path, video_frames, rng = run_optimisation(args, rng, iteration=i+1)
         final_video_paths.append(video_path)
         final_frames.extend(video_frames)
     
@@ -225,6 +266,8 @@ def main(args):
         imageio.mimsave(final_video_path, final_frames, fps=30,codec="libx264" )
         print(f"Final video saved at: {final_video_path}")
 
+    if args.wandb:
+        wandb.log({"prompts": table})
 
 if __name__ == '__main__':
     main(parse_args())
