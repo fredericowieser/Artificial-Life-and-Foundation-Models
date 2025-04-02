@@ -111,6 +111,8 @@ def run_for_iteration(
     )
 
     # embed all prompts at once => shape (P, D), where P = n_prompts
+    print("Prompt list:", prompt_list)
+    import pdb; pdb.set_trace()
     z_txt = fm.embed_txt(prompt_list[-1])
 
     # 3) CMA-ES setup
