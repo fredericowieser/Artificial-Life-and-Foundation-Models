@@ -38,6 +38,7 @@ group.add_argument("--prompts", type=str, default="a biological cell;two biologi
 group.add_argument("--coef_prompt", type=float, default=1., help="coefficient for ASAL prompt loss")
 group.add_argument("--coef_softmax", type=float, default=0.5, help="coefficient for softmax loss (only for multiple temporal prompts)")
 group.add_argument("--coef_oe", type=float, default=0., help="coefficient for ASAL open-endedness loss (only for single prompt)")
+group.add_argument("--instruction_prompt", type=str, default="diverse_open_ended", help="specify which instruction prompt in the instruction_prompts dictionary to use (see instruction_prompts.py)")
 
 group = parser.add_argument_group("optimization")
 group.add_argument("--bs", type=int, default=1, help="number of init states to average simulation over")
