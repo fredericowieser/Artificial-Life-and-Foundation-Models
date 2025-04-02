@@ -59,6 +59,14 @@ Iteration {i}: Propose the NEXT TARGET PROMPT.  Focus on evolving life forms wit
 
 NEXT TARGET PROMPT: """
 
+DIVERSE_OPEN_ENDED = """This artificial life simulation has been optimised to follow this sequence of prompts:
+'{all_prompts}'.
+Consider these as constraints: ecological niches that have already been explored.
+
+You are in iteration {i}.  Your task is to propose the NEXT TARGET PROMPT to determine the next stage of evolution.  This is an opportunity to propose a direction that is significantly different from the past, but leads to interesting lifelike behaviour.  Can we recreate open-ended evolution of life?  Be bold and creative!  ONLY output the new target prompt.
+
+NEXT TARGET PROMPT: """
+
 prompts = {
     "diverse_original": DIVERSE_ORIGINAL,
     "diverse_novelty_bonus": DIVERSE_NOVELTY_BONUS,
@@ -66,4 +74,5 @@ prompts = {
     "diverse_few_shot": DIVERSE_FEW_SHOT,
     "short": SHORT,
     "short_behaviours": SHORT_BEHAVIOURS,
+    "diverse_final": DIVERSE_OPEN_ENDED
 }

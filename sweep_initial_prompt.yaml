@@ -1,0 +1,41 @@
+program: main_evolutionary_prompts_temporal.py
+project: alife-project
+entity: ucl-asal
+group: evolutionary-prompting
+name: sweep-instruction-prompts
+method: grid
+parameters:
+  coef_softmax:
+    value: 0.5
+  save_dir:
+    value: "./data/instruction_prompt_sweep"
+  substrate:
+    value: "lenia"
+  time_sampling:
+    value: 1
+  prompts:
+    values: ["a caterpillar", "a tree", "an alien", "a bird", "a fish", "a flower", "a virus", "a human"]
+  coef_prompt:
+    value: 1.
+  coef_oe:
+    value: 0.
+  bs:
+    value: 1
+  pop_size:
+    value: 16
+  n_iters:
+    value: 1000
+  sigma:
+    value: 0.1
+  N:
+    value: 5
+  temp:
+    value: 0.1
+  max_images:
+    value: 10
+  wandb:
+    value: true
+  instruction_prompt:
+    value: "diverse_open_ended"
+  
+  
