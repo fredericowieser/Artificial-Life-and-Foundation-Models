@@ -88,7 +88,7 @@ def run_for_iteration(
     That means each time chunk in the same rollout is matched to a different prompt.
     Returns best_params, video_frames, updated rng.
     """
-    print(f"\n=== Iteration {iteration_idx} with prompts:", prompt_list, "===")
+    print(f"\n=== Iteration {iteration_idx} with last prompt:", prompt_list[-1], "===")
 
     # 1) Prepare foundation model & substrate
     fm = foundation_models.create_foundation_model(args.foundation_model)
@@ -107,13 +107,13 @@ def run_for_iteration(
         substrate=substrate,
         fm=fm,
         rollout_steps=args.rollout_steps,
-        time_sampling=(n_prompts, True),  # e.g. (2, True) if 2 prompts
+        time_sampling=(1, True),  # e.g. (2, True) if 2 prompts
         img_size=224,
         return_state=False
     )
 
     # embed all prompts at once => shape (P, D), where P = n_prompts
-    z_txt = fm.embed_txt(prompt_list)
+    z_txt = fm.embed_txt(prompt_list[-1])
 
     # 3) CMA-ES setup
     if rng is None:
