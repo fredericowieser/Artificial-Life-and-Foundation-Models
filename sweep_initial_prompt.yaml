@@ -2,7 +2,7 @@ program: main_evolutionary_prompts_temporal.py
 project: alife-project
 entity: ucl-asal
 group: evolutionary-prompting
-name: sweep-initial-prompts
+name: sweep-initial-prompts-novelty-bonus
 method: grid
 parameters:
   coef_softmax:
@@ -30,12 +30,12 @@ parameters:
   N:
     value: 5
   temp:
-    value: 0.1
+    value: 1.0
   max_images:
     value: 10
   wandb:
     value: true
   instruction_prompt:
-    value: "diverse_open_ended"
+    value: "diverse_novelty_bonus"
   
   
