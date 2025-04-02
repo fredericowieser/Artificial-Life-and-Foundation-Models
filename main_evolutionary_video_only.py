@@ -351,8 +351,9 @@ def main(args):
             max_images=args.max_images,
         )
 
-        new_prompt = strip_formatting(new_prompt)
         print(f"[Iteration {i}] Gemma suggested => '{new_prompt}'")
+        new_prompt = strip_formatting(new_prompt)
+        print(f"Cleaned prompt: '{new_prompt}'")
 
         # Log the prompt file and text to wandb
         if args.wandb:
