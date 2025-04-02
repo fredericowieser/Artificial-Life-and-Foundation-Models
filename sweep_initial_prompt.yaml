@@ -2,7 +2,7 @@ program: main_evolutionary_prompts_temporal.py
 project: alife-project
 entity: ucl-asal
 group: evolutionary-prompting
-name: sweep-instruction-prompts
+name: sweep-initial-prompts
 method: grid
 parameters:
   coef_softmax:
@@ -14,7 +14,7 @@ parameters:
   time_sampling:
     value: 1
   prompts:
-    values: ["a caterpillar", "a tree", "an alien", "a bird", "a fish", "a flower", "a virus", "a human"]
+    values: ["a tree", "a bird", "a fish", "a caterpillar", "an alien", "a flower", "a virus", "a human"]
   coef_prompt:
     value: 1.
   coef_oe:
