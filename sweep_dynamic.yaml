@@ -1,0 +1,55 @@
+program: main_evolutionary_prompts_temporal_dynamic_rollout.py
+project: alife-project
+entity: ucl-asal
+group: evolutionary-prompting
+name: sweep-dyanmic-rollout
+method: grid
+parameters:
+  coef_softmax:
+    value: 0.5
+  save_dir:
+    value: "./data/dynamic_rollouts"
+  substrate:
+    value: "lenia"
+  time_sampling:
+    value: 1
+  prompts:
+    values: ["a microbe",
+              "a caterpillar",
+              "a fungus",
+              "an extraterrestrial life",
+              "a flower",
+              "a dying star",
+              "primordial soup",
+              "a pepperoni pizza",
+              "the big bang",
+              "a slime mould",
+              "an egg hatching",
+              "the garden of eden",
+              "a monkey",
+              "a prokaryote",
+              "a rainbow"]
+  coef_prompt:
+    value: 1.
+  coef_oe:
+    value: 0.
+  bs:
+    value: 1
+  pop_size:
+    value: 16
+  n_iters:
+    value: 1000
+  sigma:
+    value: 0.1
+  N:
+    value: 4
+  temp:
+    value: 0.1
+  max_images:
+    value: 10
+  wandb:
+    value: true
+  instruction_prompt:
+    value: "diverse_open_ended"
+  
+  
