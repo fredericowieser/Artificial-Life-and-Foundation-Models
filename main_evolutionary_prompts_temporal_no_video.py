@@ -239,6 +239,7 @@ def load_best_params(save_dir):
 
 def save_final_prompts_csv(all_prompts, folder):
     """Saves the list of prompts to 'final_prompts.csv' in the given folder."""
+    os.makedirs(folder, exist_ok=True)
     csv_path = os.path.join(folder, "final_prompts.csv")
     with open(csv_path, "w", newline="", encoding="utf-8") as csvfile:
         writer = csv.writer(csvfile)
