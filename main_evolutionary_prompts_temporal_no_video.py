@@ -291,6 +291,8 @@ def main(args):
         # We'll run 1 CMA-ES loop with time_sampling = i
         # i.e. each chunk in the same rollout matches one prompt
         prompts_for_i = all_prompts[:i]
+        print("Prompts for i: ", prompts_for_i)
+        print("All prompts: ", all_prompts)
 
         instruction = EVOLVE_INSTRUCTION.format(i=i, all_prompts=all_prompts)
         new_prompt = gemma.generate_completion(
