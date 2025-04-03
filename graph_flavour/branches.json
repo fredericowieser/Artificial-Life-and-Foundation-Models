@@ -1,17 +1,17 @@
 {
-    "name": "a catepillar",
+    "name": "a caterpillar",
     "video_path": "a_catepillar/video_mets_1.mp4",
     "children": [
       {
-        "name": "“A caterpillar blooming.” aggressive",
+        "name": "A caterpillar blooming. aggressive",
         "video_path": "a_catepillar/a_caterpillar_blooming_aggressive/video_mets_2.mp4",
         "children": [
           {
-            "name": "“Aggressive metamorphosis.” expansive",
+            "name": "Aggressive metamorphosis. expansive",
             "video_path": "a_catepillar/a_caterpillar_blooming_aggressive/aggressive_metamorphosis_expansive/video_mets_3.mp4",
             "children": [
               {
-                "name": "“Fractured bloom.” chaotic",
+                "name": "Fractured bloom. chaotic",
                 "video_path": "a_catepillar/a_caterpillar_blooming_aggressive/aggressive_metamorphosis_expansive/fractured_bloom_chaotic/video_mets_4.mp4",
                 "children": [
                   
@@ -20,18 +20,18 @@
             ]
           },
           {
-            "name": "“Aggressive metamorphosis.” conservative",
+            "name": "Aggressive metamorphosis. conservative",
             "video_path": "a_catepillar/a_caterpillar_blooming_aggressive/aggressive_metamorphosis_conservative/video_mets_3.mp4",
             "children": [
               {
-                "name": "“Butterfly entropy.” chaotic",
+                "name": "Butterfly entropy. chaotic",
                 "video_path": "a_catepillar/a_caterpillar_blooming_aggressive/aggressive_metamorphosis_conservative/butterfly_entropy_chaotic/video_mets_4.mp4",
                 "children": [
                   
                 ]
               },
               {
-                "name": "“Chromatic chrysalis.” serene",
+                "name": "Chromatic chrysalis. serene",
                 "video_path": "a_catepillar/a_caterpillar_blooming_aggressive/aggressive_metamorphosis_conservative/chromatic_chrysalis_serene/video_mets_4.mp4",
                 "children": [
                   
@@ -42,22 +42,22 @@
         ]
       },
       {
-        "name": "“A caterpillar, bioluminescent, fractal patterns.” defensive",
+        "name": "A caterpillar, bioluminescent, fractal patterns. defensive",
         "video_path": "a_catepillar/a_caterpillar_bioluminescent_fractal_patterns_defe/video_mets_2.mp4",
         "children": [
           {
-            "name": "“Bioluminescent caterpillar, fractal defense system, pulsating.” expansive",
-            "video_path": "a_catepillar/a_caterpillar_bioluminescent_fractal_patterns_defe/bioluminescent_caterpillar_fractal_defense_pulsati/video_mets_3.mp4",
+            "name": "Bioluminescent caterpillar, fractal defense system, pulsating. expansive",
+            "video_path": "a_catepillar/a_caterpillar_bioluminescent_fractal_patterns_defe/bioluminescent_caterpillar_fractal_defense_system_/video_mets_3.mp4",
             "children": [
               {
-                "name": "“Bioluminescent fractal caterpillar, symbiotic rings, pulsating defense.” chaotic",
+                "name": "Bioluminescent fractal caterpillar, symbiotic rings, pulsating defense. chaotic",
                 "video_path": "a_catepillar/a_caterpillar_bioluminescent_fractal_patterns_defe/bioluminescent_caterpillar_fractal_defense_system_/bioluminescent_fractal_caterpillar_symbiotic_rings/video_mets_4.mp4",
                 "children": [
                 
                 ]
               },
               {
-                "name": "“Bioluminescent fractal caterpillar, symbiotic network, pulsating defense.” serene",
+                "name": "Bioluminescent fractal caterpillar, symbiotic network, pulsating defense. serene",
                 "video_path": "a_catepillar/a_caterpillar_bioluminescent_fractal_patterns_defe/bioluminescent_caterpillar_fractal_defense_system_/bioluminescent_fractal_caterpillar_symbiotic_netwo/video_mets_4.mp4",
                 "children": [
                  
@@ -66,18 +66,18 @@
             ]
           },
           {
-            "name": "“Bioluminescent caterpillar, fractal defense, pulsating.” conservative",
+            "name": "Bioluminescent caterpillar, fractal defense, pulsating. conservative",
             "video_path": "a_catepillar/a_caterpillar_bioluminescent_fractal_patterns_defe/bioluminescent_caterpillar_fractal_defense_pulsati/video_mets_3.mp4",
             "children": [
               {
-                "name": "“Bioluminescent, fractal caterpillar, defensive camouflage, pulsating light.” chaotic",
+                "name": "Bioluminescent, fractal caterpillar, defensive camouflage, pulsating light. chaotic",
                 "video_path": "a_catepillar/a_caterpillar_bioluminescent_fractal_patterns_defe/bioluminescent_caterpillar_fractal_defense_pulsati/bioluminescent_fractal_caterpillar_defensive_camou/video_mets_4.mp4",
                 "children": [
                   
                 ]
               },
               {
-                "name": "“Bioluminescent caterpillar, fractal defense, pulsating, crystalline.” serene",
+                "name": "Bioluminescent caterpillar, fractal defense, pulsating, crystalline. serene",
                 "video_path": "a_catepillar/a_caterpillar_bioluminescent_fractal_patterns_defe/bioluminescent_caterpillar_fractal_defense_pulsati/bioluminescent_caterpillar_fractal_defense_pulsati/video_mets_4.mp4",
                 "children": [
                   
