@@ -21,7 +21,7 @@ import tempfile
 import glob
 import shutil
 import os
-
+from clean_output import strip_formatting
 from PIL import Image, ImageDraw, ImageFont
 import os
 # Gemma 3
@@ -60,6 +60,8 @@ group.add_argument("--N", type=int, default=3, help="total number of Gemma loops
 group.add_argument("--temp", type=float, default=0.0, help="Temperature for sampling")
 group.add_argument("--max_images", type=int, default=10, help="Number of image to give to Foundation Model")
 group.add_argument("--S", type=int, default=1, help="number of child branches to spawn per branch")
+group.add_argument("--instruction_prompt", type=str, default="diverse_open_ended", help="specify which instruction prompt in the instruction_prompts dictionary to use (see instruction_prompts.py)")
+
 
 
 def parse_args(*args, **kwargs):
@@ -251,10 +253,10 @@ def main(args):
     tilt_dict = {
         1: ["aggressive", "defensive"],
         2: ["expansive", "conservative"],
-        3: ["chaotic", "serene"],
+        3: ["microscopic", "macroscopic"],
         4: [" "," "]
     }
-    
+    EVOLVE_INSTRUCTION = instruction_prompts[args.instruction_prompt]
     gemma = Gemma3Chat()
 
     splitted = args.prompts.split(";")
@@ -307,12 +309,19 @@ def main(args):
                 f.write(" ; ".join(prompt_chain))
 
             # Build the instruction WITHOUT tilt text
-            instruction =(f"You just saw the video for iteration {meta}, which used prompts so far: {prompt_chain}. "
-            "Suggest a NEW single prompt (no extra text) to continue this evolution next time. Do not repeat, keep it consice and clear and have fun!"
-        )
+            instruction =(f"""This artificial life simulation has been optimised to follow this sequence of prompts:
+            '{prompt_chain}'.
+            Consider these as constraints: ecological niches that have already been explored.
+
+            You are in iteration {meta}.  Your task is to propose the NEXT TARGET PROMPT to determine the next stage of evolution.  NO EXTRA WORDS AND BE CREATIVE. This is an opportunity to propose a direction that leads to interesting and UNIQUE lifelike behaviour.  Can we recreate open-ended evolution of life?  Be bold and creative!  ONLY output the new target prompt string, and be concise. Avoid using too many adjectives.
+
+            NEXT TARGET PROMPT:"""
+                    )
             
             # Get S unique new prompts from Gemma
             unique_child_prompts = get_unique_prompts(gemma, video_frames, instruction, S)
+            for i in range(len(unique_child_prompts)):
+                unique_child_prompts[i] = strip_formatting(unique_child_prompts[i])
             print(f"Unique prompts for branch {branch_index} at meta {meta} before appending tilt:", unique_child_prompts)
 
             # Append the corresponding tilt prompt to each Gemma output (if provided)
