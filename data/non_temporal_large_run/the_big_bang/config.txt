@@ -1,0 +1,25 @@
+N: 8
+bs: 1
+seed: 0
+temp: 0.1
+sigma: 0.1
+wandb: True
+coef_oe: 0
+n_iters: 2000
+prompts: the big bang
+pop_size: 16
+save_dir: ./data/instruction_prompt_sweep
+substrate: lenia
+max_images: 10
+coef_prompt: 1
+coef_softmax: 0
+rollout_steps: None
+time_sampling: 1
+foundation_model: clip
+evolve_instruction: This artificial life simulation has been optimised to produce PREVIOUS TARGET PROMPT: '{current_prompt}'.
+Consider this as a constraint: an ecological niche that have already been explored.
+
+Your task is to propose the NEXT TARGET PROMPT to determine the next stage of evolution.  This is an opportunity to propose a direction that is significantly different from the past, but leads to interesting lifelike behaviour.  Can we recreate open-ended evolution of life?  Be bold and creative!  ONLY output the new target prompt string, and be concise. Avoid using too many adjectives.
+
+NEXT TARGET PROMPT: 
+instruction_prompt: diverse_open_ended
