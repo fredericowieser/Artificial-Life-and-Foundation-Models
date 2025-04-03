@@ -139,6 +139,41 @@ class Gemma3Chat:
             self.processor.decode(output_ids[0], skip_special_tokens=True)
         )
 
+    def generate_completion(
+        self,
+        instruction_prompt="",
+        max_tokens=20,
+        temperature=0.5,
+    ):
+        """
+        Generates completion for input prompt.
+        """
+
+        messages = [
+            {"role": "system", "content": [{"type": "text", "text": instruction_prompt}]},
+        ]
+        inputs = self.processor.apply_chat_template(
+            messages,
+            add_generation_prompt=True,
+            tokenize=True,
+            return_tensors="pt",
+            return_dict=True,
+        ).to(device=self.device)
+
+        with torch.backends.cuda.sdp_kernel(enable_flash=False, enable_mem_efficient=False, enable_math=True):
+            with torch.no_grad():
+                output_ids = self.model.generate(
+                    **inputs, 
+                    max_new_tokens=max_tokens,
+                    temperature=temperature,
+                    do_sample=True,
+                    top_p=None,
+                    top_k=None,
+                )
+        return clean_gemma_output(
+            self.processor.decode(output_ids[0], skip_special_tokens=True)
+        )
+
     def compare_videos(
         self,
         video_frames_1,
