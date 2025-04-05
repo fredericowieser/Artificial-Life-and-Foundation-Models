@@ -41,8 +41,8 @@ if __name__ == "__main__":
     # Demo
     embedder = BGEEmbed()
 
-    text1 = "a caterpillar"
-    text2 = "a chicken"
+    text1 = "caterpillar"
+    text2 = "butterfly"
 
     emb1 = embedder.embed_text(text1)
     emb2 = embedder.embed_text(text2)
