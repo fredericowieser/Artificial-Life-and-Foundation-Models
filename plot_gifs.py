@@ -1,6 +1,7 @@
 import os
 import re
 import imageio
+import textwrap
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -73,7 +74,7 @@ def create_prompt_gif_figure(directory, N=5, output_filename="prompt_gif_figure.
 
         # Create the prompt bar above the main axis using AxesDivider
         divider = make_axes_locatable(ax_main)
-        ax_bar = divider.append_axes("top", size="20%", pad=0.01, sharex=ax_main)
+        ax_bar = divider.append_axes("top", size="25%", pad=0.01, sharex=ax_main)
         ax_bar.set_xlim(0, total_w)
         ax_bar.set_ylim(0, 1)
         ax_bar.set_facecolor("black")
@@ -85,10 +86,10 @@ def create_prompt_gif_figure(directory, N=5, output_filename="prompt_gif_figure.
         ax_bar.text(
             total_w / 2, 0.5,
             f"\"{prompt}\"",
-            ha="center", va="center", color="white", fontsize=12
+            ha="center", va="center", color="white", fontsize=25
         )
 
-    fig.suptitle(f"{main_prompt} (n_iters={n_iters})", fontsize=14, color="black", y=0.9)
+    fig.suptitle(f"Temporally Evolved Supervised Target", fontsize=30, color="black", y=0.9)
     out_path = os.path.join(directory, output_filename)
     plt.savefig(out_path, bbox_inches="tight", pad_inches=0)
     plt.close(fig)
@@ -100,7 +101,7 @@ if __name__ == "__main__":
     and run the figure-generation function if it has config.txt, prompts.txt,
     and a media/videos folder.
     """
-    root_dir = "data/non_temporal_large_run"
+    root_dir = "data/temporal_large_run"
     
     # List all subdirectories in root_dir
     all_subdirs = [
