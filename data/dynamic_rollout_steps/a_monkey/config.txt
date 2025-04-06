@@ -1,0 +1,19 @@
+N: 4
+bs: 1
+seed: 0
+temp: 0.1
+sigma: 0.1
+wandb: True
+coef_oe: 0
+n_iters: 1000
+prompts: a monkey
+pop_size: 16
+save_dir: ./data/dynamic_rollouts
+substrate: lenia
+max_images: 10
+coef_prompt: 1
+coef_softmax: 0.5
+rollout_steps: None
+time_sampling: 1
+foundation_model: clip
+instruction_prompt: diverse_open_ended

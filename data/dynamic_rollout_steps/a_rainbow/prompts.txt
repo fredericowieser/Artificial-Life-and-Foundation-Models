@@ -1,0 +1,4 @@
+a rainbow
+NEXT TARGET PROMPT sound
+NEXT TARGET PROMPT sound
+NEXT TARGET PROMPT simulate bioluminescence
