@@ -1,0 +1,22 @@
+{
+    "name": "a dying star",
+    "video_path": "video_mets_1.mp4",
+    "children": [
+        {
+            "name": "simulatefragmentation low energy",
+            "video_path": "video_mets_2.mp4",
+            "children": [
+              {
+                "name": "simulatefragmentation high energy expansive",
+                "video_path": "video_mets_3.mp4",
+                "children": [
+                  {
+                    "name": "simulatefragmentation stable",
+                    "video_path": "video_mets_4.mp4",
+                    "children": [
+                   
+                    ]
+                  }]}]}]
+
+}
+       

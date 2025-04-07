@@ -1,0 +1,116 @@
+{
+    "name": "a dying star",
+    "video_path": "video_mets_1.mp4",
+    "children": [
+      {
+        "name": "simulatefragmentation low energy",
+        "video_path": "simulatefragmentation_low_energy/video_mets_2.mp4",
+        "children": [
+          {
+            "name": "simulatefragmentation high energy expansive",
+            "video_path": "simulatefragmentation_low_energy/simulatefragmentation_high_energy_expansive/video_mets_3.mp4",
+            "children": [
+              {
+                "name": "simulatefragmentation high energy chaotic stable",
+                "video_path": "simulatefragmentation_low_energy/simulatefragmentation_high_energy_expansive/simulatefragmentation_high_energy_chaotic_stable/video_mets_4.mp4",
+                "children": [
+                  {
+                    "name": "simulatefragmentation chaotic selforganizing",
+                    "video_path": "simulatefragmentation_low_energy/simulatefragmentation_high_energy_expansive/simulatefragmentation_high_energy_chaotic_stable/simulatefragmentation_chaotic_selforganizing/video_mets_5.mp4",
+                    "children": []
+                  },
+                  {
+                    "name": "simulatefragmentation chaotic emergent",
+                    "video_path": "simulatefragmentation_low_energy/simulatefragmentation_high_energy_expansive/simulatefragmentation_high_energy_chaotic_stable/simulatefragmentation_chaotic_emergent/video_mets_5.mp4",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "simulatefragmentation high energy chaotic unstable",
+                "video_path": "simulatefragmentation_low_energy/simulatefragmentation_high_energy_expansive/simulatefragmentation_high_energy_chaotic_unstable/video_mets_4.mp4",
+                "children": [
+                  {
+                    "name": "simulatefragmentation complex emergent",
+                    "video_path": "simulatefragmentation_low_energy/simulatefragmentation_high_energy_expansive/simulatefragmentation_high_energy_chaotic_unstable/simulatefragmentation_complex_emergent/video_mets_5.mp4",
+                    "children": []
+                  },
+                  {
+                    "name": "simulatefragmentation selfassembly chaotic",
+                    "video_path": "simulatefragmentation_low_energy/simulatefragmentation_high_energy_expansive/simulatefragmentation_high_energy_chaotic_unstable/simulatefragmentation_selfassembly_chaotic/video_mets_5.mp4",
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "simulatefragmentation high energy conservative",
+            "video_path": "simulatefragmentation_low_energy/simulatefragmentation_high_energy_conservative/video_mets_3.mp4",
+            "children": [
+              {
+                "name": "simulatefragmentation high energy chaotic stable",
+                "video_path": "simulatefragmentation_low_energy/simulatefragmentation_high_energy_conservative/simulatefragmentation_high_energy_chaotic_stable/video_mets_4.mp4",
+                "children": [
+                  {
+                    "name": "simulatefragmentation emergentstructures",
+                    "video_path": "simulatefragmentation_low_energy/simulatefragmentation_high_energy_conservative/simulatefragmentation_high_energy_chaotic_stable/simulatefragmentation_emergentstructures/video_mets_5.mp4",
+                    "children": []
+                  },
+                  {
+                    "name": "simulatefragmentation unstable emergent",
+                    "video_path": "simulatefragmentation_low_energy/simulatefragmentation_high_energy_conservative/simulatefragmentation_high_energy_chaotic_stable/simulatefragmentation_unstable_emergent/video_mets_5.mp4",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "simulatefragmentation high energy aggressive unstable",
+                "video_path": "simulatefragmentation_low_energy/simulatefragmentation_high_energy_conservative/simulatefragmentation_high_energy_aggressive_unsta/video_mets_4.mp4",
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "simulatefragmentation high energy",
+        "video_path": "simulatefragmentation_high_energy/video_mets_2.mp4",
+        "children": [
+          {
+            "name": "simulatefragmentation highenergy resonance expansive",
+            "video_path": "simulatefragmentation_high_energy/simulatefragmentation_highenergy_resonance_expansi/video_mets_3.mp4",
+            "children": [
+              {
+                "name": "simulatefragmentation resonantcollapse stable",
+                "video_path": "simulatefragmentation_high_energy/simulatefragmentation_highenergy_resonance_expansi/simulatefragmentation_resonantcollapse_stable/video_mets_4.mp4",
+                "children": []
+              },
+              {
+                "name": "simulatefragmentation resonantcollapse chromaticshift unstable",
+                "video_path": "simulatefragmentation_high_energy/simulatefragmentation_highenergy_resonance_expansi/simulatefragmentation_resonantcollapse_chromaticsh/video_mets_4.mp4",
+                "children": []
+              }
+            ]
+          },
+          {
+            "name": "simulatefragmentation highenergy chaotic conservative",
+            "video_path": "simulatefragmentation_high_energy/simulatefragmentation_highenergy_chaotic_conservat/video_mets_3.mp4",
+            "children": [
+              {
+                "name": "simulatefragmentation chaotic conservative stable",
+                "video_path": "simulatefragmentation_high_energy/simulatefragmentation_highenergy_chaotic_conservat/simulatefragmentation_chaotic_conservative_stable/video_mets_4.mp4",
+                "children": []
+              },
+              {
+                "name": "simulatefragmentation chaotic conservative unstable",
+                "video_path": "simulatefragmentation_high_energy/simulatefragmentation_highenergy_chaotic_conservat/simulatefragmentation_chaotic_conservative_unstabl/video_mets_4.mp4",
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+  

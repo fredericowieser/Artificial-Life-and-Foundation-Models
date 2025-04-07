@@ -1,0 +1,9 @@
+strict digraph {
+"video_mets_1.mp4" [label="a dying star"];
+"simulatefragmentation_low_energy/video_mets_2.mp4" [label="simulatefragmentation low energy"];
+"simulatefragmentation_low_energy/simulatefragmentation_high_energy_expansive/video_mets_3.mp4" [label="simulatefragmentation high energy expansive"];
+"simulatefragmentation_low_energy/simulatefragmentation_high_energy_expansive/simulatefragmentation_high_energy_chaotic_stable/video_mets_4.mp4" [label="simulatefragmentation stable"];
+"video_mets_1.mp4" -> "simulatefragmentation_low_energy/video_mets_2.mp4";
+"simulatefragmentation_low_energy/video_mets_2.mp4" -> "simulatefragmentation_low_energy/simulatefragmentation_high_energy_expansive/video_mets_3.mp4";
+"simulatefragmentation_low_energy/simulatefragmentation_high_energy_expansive/video_mets_3.mp4" -> "simulatefragmentation_low_energy/simulatefragmentation_high_energy_expansive/simulatefragmentation_high_energy_chaotic_stable/video_mets_4.mp4";
+}

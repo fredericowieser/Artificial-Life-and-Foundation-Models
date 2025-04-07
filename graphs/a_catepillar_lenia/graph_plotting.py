@@ -19,10 +19,15 @@ def build_graph_from_json(data, G=None):
         build_graph_from_json(child, G)
     return G
 
-def create_node_composite(video_path, label, video_size=(300,300), font_size=24):
+import textwrap
+
+def create_node_composite(video_path, label, video_size=(300,300), font_size=24, max_chars_per_line=20):
     """
-    Loads a video, resizes it to video_size, and creates a composite with text
-    placed below the video. Returns the composite clip along with its bounding box (cw, ch).
+    Loads a video from 'video_path', resizes it to video_size, and creates a composite clip
+    that displays the video on top and a text label below. If the label is too long,
+    it is wrapped onto multiple lines.
+    
+    Returns a tuple: (node_clip, composite_width, composite_height)
     """
     if not os.path.isfile(video_path):
         print(f"Warning: Missing video {video_path}")
@@ -33,24 +38,30 @@ def create_node_composite(video_path, label, video_size=(300,300), font_size=24)
         print(f"Error loading {video_path}: {e}")
         return None, 0, 0
 
-    # Create text clip to display below the video.
+    # Wrap the label text if too long:
+    wrapped_label = "\n".join(textwrap.wrap(label, width=max_chars_per_line))
+    
     txt_clip = TextClip(
-        label,
-        font="Arial",
+        wrapped_label,
+        font="Arial",       # Change if necessary to a font available on your system
         fontsize=font_size,
         color="black"
     ).set_duration(vid_clip.duration)
-
-    # Compose a new clip: video on top, text below.
+    
+    # Composite size: video on top, text below
     composite_width = video_size[0]
     composite_height = video_size[1] + txt_clip.h
     video_pos = (0, 0)
     text_pos = ((composite_width - txt_clip.w) / 2, video_size[1])
+    
     node_comp = CompositeVideoClip(
-        [vid_clip.set_position(video_pos), txt_clip.set_position(text_pos)],
+        [vid_clip.set_position(video_pos),
+         txt_clip.set_position(text_pos)],
         size=(composite_width, composite_height)
     ).set_duration(vid_clip.duration)
+    
     return node_comp, composite_width, composite_height
+
 
 def scale_and_center_positions(raw_positions, final_width, final_height, margin=200):
     """
@@ -95,7 +106,7 @@ def draw_edges_center_to_center(G, centers, size, line_color=(0,0,0,255), line_w
             draw.line((x1, y1, x2, y2), fill=line_color, width=line_width)
     return img
 
-def create_graph_composite(json_data, final_size=(1280,720), video_size=(300,300), margin=200):
+def create_graph_composite(json_data, final_size=(2280,1720), video_size=(400,400), margin=200):
     """
     1. Builds graph from JSON.
     2. Computes a graphviz layout and scales & centers positions.
@@ -113,7 +124,7 @@ def create_graph_composite(json_data, final_size=(1280,720), video_size=(300,300
     durations = []
     for node in G.nodes():
         # Use the cleaned node ID.
-        clip, cw, ch = create_node_composite(node, G.nodes[node].get("label", ""), video_size, font_size=24)
+        clip, cw, ch = create_node_composite(node, G.nodes[node].get("label", ""), video_size, font_size=34)
         if clip is not None:
             node_info[node] = {"clip": clip, "cw": cw, "ch": ch}
             durations.append(clip.duration)
@@ -150,7 +161,7 @@ def main():
     with open(json_file, "r", encoding="utf-8") as f:
         data = json.load(f)
     
-    final = create_graph_composite(data, final_size=(2080,1720), video_size=(200,200), margin=400)
+    final = create_graph_composite(data, final_size=(2080,2720), video_size=(100,100), margin=200)
     if final is None:
         print("Failed to create composite.")
         return

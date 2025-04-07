@@ -1,0 +1,89 @@
+{
+  "name": "a dying star",
+  "video_path": "video_mets_1.mp4",
+  "children": [
+      {
+          "name": "simulate fragmentation low energy",
+          "video_path": "video_mets_2_copy.mp4",
+          "children": [
+            {
+              "name": "simulate fragmentation high energy expansive",
+              "video_path": "video_mets_3_copy.mp4",
+              "children": [
+                {
+                  "name": "simulate fragmentation stable",
+                  "video_path": "video_mets_4_copy.mp4",
+                  "children": [
+                
+                ]
+              },
+              {
+                "name": "simulate fragmentation high energy chaotic unstable",
+                "video_path": "video_mets_4_copy_2.mp4",
+                "children": [
+              
+                ]
+              }
+            ]
+          },
+          {
+            "name": "simulate fragmentation high energy conservative",
+            "video_path": "video_mets_3_copy_2.mp4",
+            "children": [
+              {
+                "name": "simulate fragmentation high energy chaotic stable",
+                "video_path": "video_mets_4_copy_3.mp4",
+                "children": [
+               
+                ]
+              },
+              {
+                "name": "simulate fragmentation high energy aggressive unstable",
+                "video_path": "video_mets_4_copy_4.mp4",
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "simulate fragmentation high energy",
+        "video_path": "video_mets_2.mp4",
+        "children": [
+          {
+            "name": "simulate fragmentation high energy resonance expansive",
+            "video_path": "video_mets_3_copy_3.mp4",
+            "children": [
+              {
+                "name": "simulate fragmentation resonant collapse stable",
+                "video_path": "video_mets_4_copy_5.mp4",
+                "children": []
+              },
+              {
+                "name": "simulate fragmentation resonant collapse chromaticshift unstable",
+                "video_path": "video_mets_4_copy_6.mp4",
+                "children": []
+              }
+            ]
+          },
+          {
+            "name": "simulate fragmentation high energy chaotic conservative",
+            "video_path": "video_mets_3_copy_4.mp4",
+            "children": [
+              {
+                "name": "simulate fragmentation chaotic conservative stable",
+                "video_path": "video_mets_4_copy_7.mp4",
+                "children": []
+              },
+              {
+                "name": "simulate fragmentation chaotic conservative unstable",
+                "video_path": "video_mets_4_copy_8.mp4",
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+  
